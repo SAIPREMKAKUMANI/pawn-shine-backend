@@ -1,0 +1,41 @@
+Wanted to use Oracle Cloud(Always Free Tier).
+Need to setup a cron job.
+
+Oracle cloud free tier backend hosting is also fast.
+
+CORS Setup.
+
+To make cloud hosted backend faster
+1. Use Indexing(Critical)
+2. USe Pagination.
+3. Optimize Queries.
+4. Connection Pooling.
+"# application.properties
+ spring.datasource.hikari.maximum-pool-size=20
+ spring.datasource.hikari.minimum-idle=5
+ spring.datasource.hikari.connection-timeout=30000
+ spring.datasource.hikari.idle-timeout=600000
+ spring.datasource.hikari.max-lifetime=1800000"
+
+ 5. Use Caching.
+ 6. JVM Optimization.
+ "# When running Spring Boot on Oracle Cloud VM
+  java -jar \
+    -Xms512m \
+    -Xmx2g \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -server \
+    your-app.jar"
+
+  7. Query Result Caching.
+  "@Entity
+   @Cacheable
+   @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+   public class Product {
+       @Id
+       private Long id;
+       private String name;
+       private Double price;
+   }"
+   8. Use Batch Ops.

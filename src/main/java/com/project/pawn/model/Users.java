@@ -21,5 +21,8 @@ public class Users {
 
     @Column(name = "role",nullable = false)
     private String role;
-}
 
+    // Optional device token returned when a user registers a device (client should bind this token to the device fingerprint locally)
+    @Column(name = "device_token")
+    private String deviceToken;
+}

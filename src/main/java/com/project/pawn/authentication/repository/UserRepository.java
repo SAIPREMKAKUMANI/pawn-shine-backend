@@ -1,6 +1,6 @@
-package com.project.pawn.repository;
+package com.project.pawn.authentication.repository;
 
-import com.project.pawn.model.Users;
+import com.project.pawn.authentication.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

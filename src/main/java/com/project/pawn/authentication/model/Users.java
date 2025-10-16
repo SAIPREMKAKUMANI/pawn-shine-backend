@@ -1,4 +1,4 @@
-package com.project.pawn.model;
+package com.project.pawn.authentication.model;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,6 +1,6 @@
-package com.project.pawn.filter;
+package com.project.pawn.authentication.filter;
 
-import com.project.pawn.security.JwtUtil;
+import com.project.pawn.authentication.security.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

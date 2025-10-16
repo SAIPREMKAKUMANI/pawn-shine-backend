@@ -1,8 +1,8 @@
-package com.project.pawn.controller;
+package com.project.pawn.authentication.controller;
 
-import com.project.pawn.payload.AuthRequest;
-import com.project.pawn.payload.AuthResponse;
-import com.project.pawn.security.JwtUtil;
+import com.project.pawn.authentication.payload.AuthRequest;
+import com.project.pawn.authentication.payload.AuthResponse;
+import com.project.pawn.authentication.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

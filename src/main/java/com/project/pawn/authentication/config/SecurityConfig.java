@@ -1,7 +1,7 @@
-package com.project.pawn.config;
+package com.project.pawn.authentication.config;
 
-import com.project.pawn.filter.JwtRequestFilter;
-import com.project.pawn.service.UserService;
+import com.project.pawn.authentication.service.UserService;
+import com.project.pawn.authentication.filter.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

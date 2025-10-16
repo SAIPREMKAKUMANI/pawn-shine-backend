@@ -1,4 +1,4 @@
-package com.project.pawn.security;
+package com.project.pawn.authentication.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

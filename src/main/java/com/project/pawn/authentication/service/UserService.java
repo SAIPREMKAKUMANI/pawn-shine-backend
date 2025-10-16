@@ -1,7 +1,7 @@
-package com.project.pawn.service;
+package com.project.pawn.authentication.service;
 
-import com.project.pawn.model.Users;
-import com.project.pawn.repository.UserRepository;
+import com.project.pawn.authentication.model.Users;
+import com.project.pawn.authentication.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

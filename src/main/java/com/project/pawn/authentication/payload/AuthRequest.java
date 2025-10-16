@@ -1,4 +1,4 @@
-package com.project.pawn.payload;
+package com.project.pawn.authentication.payload;
 
 import lombok.Data;
 

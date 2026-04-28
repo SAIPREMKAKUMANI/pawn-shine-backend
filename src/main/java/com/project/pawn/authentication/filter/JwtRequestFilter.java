@@ -6,6 +6,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,8 +19,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
+
+    private static final String USERNAME_MDC_KEY = "username";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
@@ -26,35 +32,52 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
-        String username = null;
-        String jwt = null;
+
         String path = request.getRequestURI();
-        if (path.startsWith("/api/auth/login")) {
+        if (isPublicPath(path)) {
             chain.doFilter(request, response);
             return;
         }
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
-        jwt = authorizationHeader.substring(7);
-        username = jwtUtil.extractUsername(jwt);
-        if (username == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-            return;
-        }
-        if(SecurityContextHolder.getContext().getAuthentication() != null) {
+
+        try {
+            String jwt = authorizationHeader.substring(BEARER_PREFIX.length());
+            String username = jwtUtil.extractUsername(jwt);
+
+            if (username == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (jwtUtil.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+
+            MDC.put(USERNAME_MDC_KEY, username);
             chain.doFilter(request, response);
-            return;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.warn("Expired JWT token for request: {}", path);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+        } catch (io.jsonwebtoken.JwtException e) {
+            log.warn("Invalid JWT token for request: {}", path);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+        } finally {
+            MDC.remove(USERNAME_MDC_KEY);
         }
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-        if (jwtUtil.validateToken(jwt, userDetails)) {
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-        }
-        chain.doFilter(request, response);
+    }
+
+    private boolean isPublicPath(String path) {
+        return path.startsWith("/api/auth/login") || path.startsWith("/api/auth/webauthn");
     }
 }

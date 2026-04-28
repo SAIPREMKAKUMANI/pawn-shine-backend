@@ -1,12 +1,13 @@
 package com.project.pawn.customeronboarding.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,6 +19,11 @@ public class ContactInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "contact_id")
     private Long contactId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cust_id", referencedColumnName = "cust_id")
+    @JsonBackReference
+    private CustomerInfo customer;
 
     @Column(name = "phone")
     private String phone;
@@ -31,7 +37,31 @@ public class ContactInfo {
     @Column(name = "email")
     private String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cust_id", nullable = false)
-    private CustomerInfo customer;
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public String toString() {
+        return "contact_id : " + contactId + " phone : " + phone;
+    }
 }

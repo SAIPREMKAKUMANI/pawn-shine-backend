@@ -12,9 +12,10 @@ import java.time.Duration;
 @EnableCaching
 public class CacheConfig {
 
+    //I don't want to cache images in client cache.
     @Bean
     public CaffeineCacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("customers", "contacts", "idProofs", "addresses", "relatives", "idProofsVersion", "contactsVersion", "addressesVersion", "relativesVersion");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("customers");
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()
                         .expireAfterWrite(Duration.ofMinutes(60))

@@ -39,3 +39,9 @@ To make cloud hosted backend faster
        private Double price;
    }"
    8. Use Batch Ops.
+
+   Need to use ElasticSearch also, when a customer is onboarded(also onboard necessary details like, name, phoneNumber, whatsAppNum, village)
+   into ElasticSearch.
+
+   Need to handle UpdateCustomer.
+   Need to handle in UI also.

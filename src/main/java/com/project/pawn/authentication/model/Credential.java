@@ -1,28 +1,42 @@
-// ...existing code...
-package com.project.pawn.model;
+package com.project.pawn.authentication.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Data
+@Table(name = "credentials")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Credential {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String username;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
-    @Column(nullable = false, unique = true)
-    private String credentialId; // base64 or url-safe base64
+    @Column(name = "credential_id", nullable = false, unique = true)
+    private String credentialId;
 
-    @Lob
-    private String publicKey; // stored attestation / public key (for demo we store raw data)
+    @Column(name = "public_key", nullable = false, length = 2048)
+    private String publicKey;
 
-    private Long signCount;
+    @Column(name = "sign_count")
+    @Builder.Default
+    private Long signCount = 0L;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
-// ...existing code...

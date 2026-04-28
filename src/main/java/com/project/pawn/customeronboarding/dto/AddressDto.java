@@ -1,11 +1,12 @@
 package com.project.pawn.customeronboarding.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @Builder
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class AddressDto {
     @JsonProperty("cust_id")
     private Long custId;
@@ -19,8 +20,8 @@ public class AddressDto {
     @JsonProperty("state")
     private String state;
 
-    @JsonProperty("zip_code")
-    private String zipCode;
+    @JsonProperty("postal_code")
+    private String postalCode;
 
     @JsonProperty("country")
     private String country;

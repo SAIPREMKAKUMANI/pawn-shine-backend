@@ -1,17 +1,22 @@
 package com.project.pawn.customeronboarding.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
 @Builder
-@Entity(name = "id_proof_info")
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "id_proof_info")
 public class IdProofInfo {
+
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_proof_id")
     private Long idProofId;
 
@@ -24,8 +29,36 @@ public class IdProofInfo {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cust_id", nullable = false)
+    @JsonBackReference
     private CustomerInfo customer;
-}
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public String toString() {
+        return "id_proof_id : " + idProofId + " id_type : " + idType;
+    }
+}

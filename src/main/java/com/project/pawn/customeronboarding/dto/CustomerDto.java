@@ -1,17 +1,19 @@
 package com.project.pawn.customeronboarding.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.pawn.customeronboarding.model.AddressInfo;
-import com.project.pawn.customeronboarding.model.ContactInfo;
-import com.project.pawn.customeronboarding.model.IdProofInfo;
-import com.project.pawn.customeronboarding.model.RelativeInfo;
-import lombok.Builder;
-import lombok.Data;
+import com.project.pawn.customeronboarding.enums.Gender;
+import com.project.pawn.customeronboarding.enums.MaritalStatus;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
 @Builder
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class CustomerDto {
     @JsonProperty("cust_id")
     private Long custId;
@@ -23,22 +25,24 @@ public class CustomerDto {
     private LocalDate dateOfBirth;
 
     @JsonProperty("gender")
-    private String gender;
-
-    @JsonProperty("nationality")
-    private String nationality;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @JsonProperty("marital_status")
-    private String maritalStatus;
+    @Enumerated(EnumType.STRING)
+    private MaritalStatus maritalStatus;
 
     @JsonProperty("status")
     private String status;
 
-    @JsonProperty("created_by")
-    private String createdBy;
+    @JsonProperty("occupation")
+    private String occupation;
 
-    @JsonProperty("updated_by")
-    private String updatedBy;
+    @JsonProperty("image_url")
+    private String imageUrl;
+
+    @JsonProperty("image")
+    private MultipartFile image;
 
     @JsonProperty("contacts")
     private List<ContactDto> contacts;
@@ -51,4 +55,10 @@ public class CustomerDto {
 
     @JsonProperty("relatives")
     private List<RelativeDto> relatives;
+
+    @JsonProperty("created_at")
+    private LocalDate createdAt;
+
+    @JsonProperty("updated_at")
+    private LocalDate updatedAt;
 }

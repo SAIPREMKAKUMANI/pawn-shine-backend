@@ -1,11 +1,12 @@
 package com.project.pawn.customeronboarding.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @Builder
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class ContactDto {
 
     @JsonProperty("cust_id")

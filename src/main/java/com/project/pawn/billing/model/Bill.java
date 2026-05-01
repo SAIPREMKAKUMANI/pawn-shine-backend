@@ -1,5 +1,6 @@
 package com.project.pawn.billing.model;
 
+import com.project.pawn.billing.enums.BillStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -48,6 +49,10 @@ public class Bill {
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "status", nullable = false, length = 20)
+    @Builder.Default
+    private String status = BillStatus.ACTIVE.name();
 
     @Column(name = "created_by", length = 100)
     private String createdBy;

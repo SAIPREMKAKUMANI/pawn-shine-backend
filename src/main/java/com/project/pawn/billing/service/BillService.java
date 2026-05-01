@@ -10,11 +10,13 @@ import com.project.pawn.billing.mapper.BillingMapper;
 import com.project.pawn.billing.model.Bill;
 import com.project.pawn.billing.model.BillAccount;
 import com.project.pawn.billing.model.BillItem;
+import com.project.pawn.billing.repository.BillItemRepository;
 import com.project.pawn.billing.repository.BillRepository;
 import com.project.pawn.customeronboarding.model.CustomerInfo;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.pledge.model.Item;
 import com.project.pawn.pledge.service.ItemService;
+import com.project.pawn.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -41,10 +43,12 @@ public class BillService {
     private static final AtomicLong BILL_COUNTER = new AtomicLong(0);
 
     private final BillRepository billRepository;
+    private final BillItemRepository billItemRepository;
     private final CustomerRepository customerRepository;
     private final ItemService itemService;
     private final TransactionService transactionService;
     private final BillingMapper billingMapper;
+    private final WalletService walletService;
 
     /**
      * Creates a PLEDGE bill — lending money, keeping items as collateral.
@@ -91,7 +95,7 @@ public class BillService {
             );
 
             BillItem billItem = BillItem.builder()
-                    .itemId(createdItem.getId())
+                    .itemId(createdItem.getId()) //TODO: Need to set the billId too.
                     .action(BillItemAction.KEPT.name())
                     .amount(itemReq.getAmount())
                     .build();
@@ -144,23 +148,25 @@ public class BillService {
         log.info("Creating redemption bill for customer {}", request.getCustId());
 
         validateCustomerExists(request.getCustId());
-        validateAccountsNotEmpty(request.getAccounts());
+        
+        boolean hasAccounts = request.getAccounts() != null && !request.getAccounts().isEmpty();
+        boolean usesWallet = request.getWalletAmountUsed() != null && request.getWalletAmountUsed().compareTo(BigDecimal.ZERO) > 0;
+        
+        if (!hasAccounts && !usesWallet) {
+            throw new IllegalArgumentException("At least one payment account or wallet usage is required");
+        }
 
         if (request.getItemIds() == null || request.getItemIds().isEmpty()) {
             throw new IllegalArgumentException("At least one item ID is required for redemption");
         }
 
-        Bill bill = Bill.builder()
-                .billId(generateBillId())
-                .custId(request.getCustId())
-                .billType(BillType.DEBIT.name())
-                .billDate(request.getBillDate() != null ? request.getBillDate() : LocalDate.now())
-                .notes(request.getNotes())
-                .createdBy(MDC.get(USERNAME))
-                .build();
+        Long firstItemId = request.getItemIds().get(0);
+        Bill bill = billItemRepository.findByItemId(firstItemId).stream()
+                .map(BillItem::getBill)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Pledge bill not found for item: " + firstItemId));
 
         BigDecimal totalInterest = BigDecimal.ZERO;
-        BigDecimal totalLended = BigDecimal.ZERO;
         BigDecimal totalPayment = BigDecimal.ZERO;
 
         for (Long itemId : request.getItemIds()) {
@@ -179,41 +185,138 @@ public class BillService {
             bill.addBillItem(billItem);
 
             totalInterest = totalInterest.add(item.getCompoundInterest());
-            totalLended = totalLended.add(item.getAmountLended());
             totalPayment = totalPayment.add(outstanding);
         }
 
-        bill.setTotalAmountLended(totalLended);
-        bill.setAmountPaid(totalPayment);
-        bill.setInterestAccumulated(totalInterest);
+        BigDecimal sumAccounts = hasAccounts ? request.getAccounts().stream().map(BillAccountDto::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+        BigDecimal walletAmount = usesWallet ? request.getWalletAmountUsed() : BigDecimal.ZERO;
+
+        if (sumAccounts.add(walletAmount).compareTo(totalPayment) != 0) {
+            throw new IllegalArgumentException("Sum of account amounts and wallet usage must equal total redemption payment of " + totalPayment);
+        }
+
+        if (usesWallet) {
+            walletService.withdraw(request.getCustId(), walletAmount, bill.getBillId(), "Used for redemption of items");
+        }
+
+        bill.setAmountPaid(bill.getAmountPaid().add(totalPayment));
+        bill.setInterestAccumulated(bill.getInterestAccumulated().add(totalInterest));
+
+        if (request.getNotes() != null && !request.getNotes().isEmpty()) {
+            String currentNotes = bill.getNotes() != null ? bill.getNotes() : "";
+            bill.setNotes(currentNotes + "\nRedemption Notes: " + request.getNotes());
+        }
 
         // Add payment accounts (money coming IN)
-        for (BillAccountDto acctReq : request.getAccounts()) {
-            BillAccount billAccount = BillAccount.builder()
-                    .accountId(acctReq.getAccountId())
-                    .amount(acctReq.getAmount())
-                    .direction(PaymentDirection.IN.name())
-                    .build();
-            bill.addBillAccount(billAccount);
+        if (hasAccounts) {
+            for (BillAccountDto acctReq : request.getAccounts()) {
+                BillAccount billAccount = BillAccount.builder()
+                        .accountId(acctReq.getAccountId())
+                        .amount(acctReq.getAmount())
+                        .direction(PaymentDirection.IN.name())
+                        .build();
+                bill.addBillAccount(billAccount);
+            }
         }
 
         Bill savedBill = billRepository.save(bill);
 
         // Record transactions for each account (money coming in)
-        for (BillAccountDto acctReq : request.getAccounts()) {
-            transactionService.recordTransaction(
-                    acctReq.getAccountId(),
-                    acctReq.getAmount(),
-                    TransactionType.CREDIT,
-                    savedBill.getId(),
-                    "Redemption bill " + savedBill.getBillId() + " - payment received",
-                    savedBill.getBillId()
-            );
+        if (hasAccounts) {
+            for (BillAccountDto acctReq : request.getAccounts()) {
+                transactionService.recordTransaction(
+                        acctReq.getAccountId(),
+                        acctReq.getAmount(),
+                        TransactionType.CREDIT,
+                        savedBill.getId(),
+                        "Redemption payment for bill " + savedBill.getBillId() + (request.getNotes() != null ? " - " + request.getNotes() : ""),
+                        savedBill.getBillId()
+                );
+            }
         }
 
-        log.info("Redemption bill {} created. Total paid: {}, interest: {}",
+        log.info("Redemption recorded for bill {}. Total paid: {}, interest: {}",
                 savedBill.getBillId(), totalPayment, totalInterest);
         return enrichBillDto(billingMapper.toBillDto(savedBill));
+    }
+
+    @Transactional
+    public BillDto updateBillStatus(Long billId, UpdateBillStatusRequest request) {
+        log.info("Updating status of bill {} to {}", billId, request.getStatus());
+        Bill bill = billRepository.findById(billId)
+                .orElseThrow(() -> new IllegalArgumentException("Bill not found with ID: " + billId));
+        
+        bill.setStatus(request.getStatus());
+        Bill savedBill = billRepository.save(bill);
+        
+        return enrichBillDto(billingMapper.toBillDto(savedBill));
+    }
+
+    @Transactional
+    public BillDto recordPayment(Long pledgeBillId, RecordPaymentRequest request) {
+        log.info("Recording payment for pledge bill {}, amount: {}", pledgeBillId, request.getPaymentAmount());
+        
+        validateCustomerExists(request.getCustId());
+        
+        boolean hasAccounts = request.getAccounts() != null && !request.getAccounts().isEmpty();
+        boolean usesWallet = request.getWalletAmountUsed() != null && request.getWalletAmountUsed().compareTo(BigDecimal.ZERO) > 0;
+        
+        if (!hasAccounts && !usesWallet) {
+            throw new IllegalArgumentException("At least one payment account or wallet usage is required");
+        }
+
+        BigDecimal sumAccounts = hasAccounts ? request.getAccounts().stream().map(BillAccountDto::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+        BigDecimal walletAmount = usesWallet ? request.getWalletAmountUsed() : BigDecimal.ZERO;
+
+        if (sumAccounts.add(walletAmount).compareTo(request.getPaymentAmount()) != 0) {
+            throw new IllegalArgumentException("Sum of account amounts and wallet usage must equal total payment amount");
+        }
+        
+        Bill pledgeBill = billRepository.findById(pledgeBillId)
+                .orElseThrow(() -> new IllegalArgumentException("Pledge Bill not found with ID: " + pledgeBillId));
+                
+        // Update the amount paid on the pledge bill
+        pledgeBill.setAmountPaid(pledgeBill.getAmountPaid().add(request.getPaymentAmount()));
+
+        if (request.getNotes() != null && !request.getNotes().isEmpty()) {
+            String currentNotes = pledgeBill.getNotes() != null ? pledgeBill.getNotes() : "";
+            pledgeBill.setNotes(currentNotes + "\nPayment Notes: " + request.getNotes());
+        }
+
+        if (usesWallet) {
+            walletService.withdraw(request.getCustId(), walletAmount, pledgeBill.getBillId(), "Used for partial payment");
+        }
+
+        // Add payment accounts (money coming IN)
+        if (hasAccounts) {
+            for (BillAccountDto acctReq : request.getAccounts()) {
+                BillAccount billAccount = BillAccount.builder()
+                        .accountId(acctReq.getAccountId())
+                        .amount(acctReq.getAmount())
+                        .direction(PaymentDirection.IN.name())
+                        .build();
+                pledgeBill.addBillAccount(billAccount);
+            }
+        }
+
+        Bill savedPledgeBill = billRepository.save(pledgeBill);
+
+        // Record transactions for each account (money coming in)
+        if (hasAccounts) {
+            for (BillAccountDto acctReq : request.getAccounts()) {
+                transactionService.recordTransaction(
+                        acctReq.getAccountId(),
+                        acctReq.getAmount(),
+                        TransactionType.CREDIT,
+                        savedPledgeBill.getId(),
+                        "Payment towards bill " + savedPledgeBill.getBillId() + (request.getNotes() != null ? " - " + request.getNotes() : ""),
+                        savedPledgeBill.getBillId()
+                );
+            }
+        }
+
+        log.info("Payment recorded for bill {}. Total paid: {}", savedPledgeBill.getBillId(), request.getPaymentAmount());
+        return enrichBillDto(billingMapper.toBillDto(savedPledgeBill));
     }
 
     // --- Read operations ---

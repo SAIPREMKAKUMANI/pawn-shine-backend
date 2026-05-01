@@ -45,6 +45,9 @@ public class BillDto {
     @JsonProperty("notes")
     private String notes;
 
+    @JsonProperty("status")
+    private String status;
+
     @JsonProperty("created_by")
     private String createdBy;
 

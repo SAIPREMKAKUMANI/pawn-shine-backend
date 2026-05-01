@@ -1,26 +1,26 @@
 package com.project.pawn.billing.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Request body for creating a redemption bill (customer paying back, releasing items).
- */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateRedemptionBillRequest {
+public class RecordPaymentRequest {
 
     @JsonProperty("cust_id")
     private Long custId;
 
-    @JsonProperty("item_ids")
-    private List<Long> itemIds;
+    @JsonProperty("payment_amount")
+    private BigDecimal paymentAmount;
 
     @JsonProperty("wallet_amount_used")
     private BigDecimal walletAmountUsed;

@@ -15,9 +15,10 @@
 7. [Module 3: Accounts](#7-module-3-accounts)
 8. [Module 4: Pledge (Ornaments & Items)](#8-module-4-pledge-ornaments--items)
 9. [Module 5: Billing (Bills, Payments, Interest)](#9-module-5-billing-bills-payments-interest)
-10. [Complete User Flows (Real-World Scenarios)](#10-complete-user-flows-real-world-scenarios)
-11. [Edge Cases & Error Handling](#11-edge-cases--error-handling)
-12. [UI Pages Mapping](#12-ui-pages-mapping)
+10. [Module 6: Customer Wallet (Partial Payments)](#10-module-6-customer-wallet-partial-payments)
+11. [Complete User Flows (Real-World Scenarios)](#11-complete-user-flows-real-world-scenarios)
+12. [Edge Cases & Error Handling](#12-edge-cases--error-handling)
+13. [UI Pages Mapping](#13-ui-pages-mapping)
 
 ---
 
@@ -114,6 +115,8 @@ A shop employee who:
 | `bill_accounts` | id | Accounts used in a bill | bills.id, accounts.id |
 | `interest_ledger` | id | Interest history per item | items.id |
 | `transactions` | id | Account money movement audit | accounts.id, bills.id |
+| `customer_wallets` | id | Customer's unallocated funds | customers.cust_id |
+| `wallet_transactions` | id | Customer wallet history | customer_wallets.id |
 
 ---
 
@@ -130,6 +133,7 @@ A shop employee who:
 | `BillType` | `CREDIT` (lending out), `DEBIT` (receiving back) | BillDto |
 | `BillItemAction` | `KEPT` (item kept as collateral), `RELEASED` (returned to customer), `AUCTIONED` | BillItemDto |
 | `PaymentDirection` | `IN` (money coming in), `OUT` (money going out) | BillAccountDto |
+| `WalletTransactionType` | `DEPOSIT`, `WITHDRAWAL` | WalletTransactionDto |
 
 ---
 
@@ -897,7 +901,71 @@ Returns the latest `InterestLedgerDto` or `204 No Content` if no interest has be
 
 ---
 
-## 10. Complete User Flows (Real-World Scenarios)
+### 10. Module 6: Customer Wallet (Partial Payments)
+
+The customer wallet allows customers to make partial payments (deposits) that aren't immediately allocated to a specific item. This is crucial for maintaining an exact ledger with timestamps so the owner can accurately calculate interest based on the exact deposit dates. Later, during redemption or recording payments, the customer can use their wallet balance instead of or in addition to cash.
+
+### 10.1 Get Customer Wallet
+
+**`GET /api/wallets/{custId}`**
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "cust_id": 1,
+  "balance": 5000.00,
+  "created_at": "2026-04-20T10:30:00",
+  "updated_at": "2026-04-24T10:30:00"
+}
+```
+
+### 10.2 Get Wallet Transactions (Ledger)
+
+**`GET /api/wallets/{custId}/transactions`**
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "wallet_id": 1,
+    "amount": 5000.00,
+    "type": "DEPOSIT",
+    "transaction_date": "2026-04-24T10:30:00",
+    "notes": "Partial payment towards interest",
+    "created_at": "2026-04-24T10:30:00"
+  }
+]
+```
+
+### 10.3 Deposit to Wallet (Customer Partial Payment)
+
+**`POST /api/wallets/{custId}/deposit`**
+
+**Request:**
+```json
+{
+  "amount": 5000.00,
+  "transaction_date": "2026-04-24T10:30:00",
+  "notes": "Partial payment towards interest",
+  "accounts": [
+    {
+      "account_id": 1,
+      "amount": 5000.00
+    }
+  ]
+}
+```
+**Explanation**:
+- `amount` is the total deposited.
+- `accounts` represents where the shop received the money (e.g. ₹5000 into the Cash Counter). The sum of `accounts.amount` must equal the deposit `amount`.
+
+**Response (201):** Returns the updated `CustomerWalletDto`.
+
+---
+
+## 11. Complete User Flows (Real-World Scenarios)
 
 ### Flow 1: Morning Opening
 

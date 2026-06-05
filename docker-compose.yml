@@ -1,12 +1,13 @@
 # ============================================================
-# Pawn Shine — Private Instance (Backend + Database)
-# Run on: Private subnet instance (NO public IP)
+# Pawn Shine — Backend Docker Compose (Backend + Database)
 #
-# This compose file runs the Spring Boot backend and PostgreSQL.
-# The backend is exposed on port 8080 so the public instance's
-# Nginx can reach it over the Oracle VCN internal network.
-# The database is NOT exposed outside Docker — only the backend
-# container can reach it.
+# This is the default docker-compose.yml for the backend repo.
+# It runs on the PRIVATE instance (no public IP).
+#
+# The frontend has its own compose file in the frontend repo:
+#   pawn-shine-portal/docker-compose.public.yml
+#
+# Also available as: docker-compose.private.yml (identical copy)
 # ============================================================
 
 services:

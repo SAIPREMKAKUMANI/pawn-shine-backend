@@ -109,8 +109,14 @@ public class CustomerValidator {
                 throw new CustomerValidationException("ID number is required for ID type: " + idProof.getIdType());
             }
 
-            if (customerRepository.existsByIdProofNumber(idProof.getIdNumber())) {
-                throw new CustomerValidationException("ID number " + idProof.getIdNumber() + " already exists");
+            if (customer.getCustId() == null) {
+                if (customerRepository.existsByIdProofNumber(idProof.getIdNumber())) {
+                    throw new CustomerValidationException("ID number " + idProof.getIdNumber() + " already exists");
+                }
+            } else {
+                if (customerRepository.existsByIdProofNumberAndCustIdNot(idProof.getIdNumber(), customer.getCustId())) {
+                    throw new CustomerValidationException("ID number " + idProof.getIdNumber() + " already exists for another customer");
+                }
             }
 
             if(idProof.getIdType() == null) {

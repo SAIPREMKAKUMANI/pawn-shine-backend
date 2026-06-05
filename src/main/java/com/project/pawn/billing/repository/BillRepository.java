@@ -1,5 +1,6 @@
 package com.project.pawn.billing.repository;
 
+import com.project.pawn.billing.enums.BillType;
 import com.project.pawn.billing.model.Bill;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     Page<Bill> findByCustIdOrderByBillDateDesc(Long custId, Pageable pageable);
 
-    Page<Bill> findByBillTypeOrderByBillDateDesc(String billType, Pageable pageable);
+    Page<Bill> findByBillTypeOrderByBillDateDesc(BillType billType, Pageable pageable);
 
     Page<Bill> findAllByOrderByBillDateDesc(Pageable pageable);
 

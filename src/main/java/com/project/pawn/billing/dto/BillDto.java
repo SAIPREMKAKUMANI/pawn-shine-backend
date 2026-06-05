@@ -2,6 +2,7 @@ package com.project.pawn.billing.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.pawn.billing.enums.BillType;
+import com.project.pawn.wallet.dto.WalletAllocationDto;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -45,9 +46,6 @@ public class BillDto {
     @JsonProperty("notes")
     private String notes;
 
-    @JsonProperty("status")
-    private String status;
-
     @JsonProperty("created_by")
     private String createdBy;
 
@@ -59,4 +57,10 @@ public class BillDto {
 
     @JsonProperty("accounts")
     private List<BillAccountDto> accounts;
+
+    @JsonProperty("wallet_allocations")
+    private List<WalletAllocationDto> walletAllocations;
+
+    @JsonProperty("wallet_amount_used")
+    private BigDecimal walletAmountUsed;
 }

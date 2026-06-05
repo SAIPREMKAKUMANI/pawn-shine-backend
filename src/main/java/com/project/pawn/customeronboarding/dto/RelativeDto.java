@@ -9,6 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class RelativeDto {
+    @JsonProperty("relative_id")
+    private Long relativeId;
+
     @JsonProperty("cust_id")
     private Long custId;
 

@@ -29,3 +29,7 @@ public class WalletDepositRequest {
     @Builder.Default
     private LocalDateTime transactionDate = LocalDateTime.now();
 }
+
+//We also need to add the used money from wallet, into bill's transaction list.
+
+//When there multiple transactions or additions into wallet, we also need to include the transactions(with date), so customer will know that this money used from wallet.

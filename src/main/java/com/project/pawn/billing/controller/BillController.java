@@ -40,18 +40,6 @@ public class BillController {
         return ResponseEntity.status(HttpStatus.CREATED).body(bill);
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<BillDto> updateBillStatus(@PathVariable Long id, @RequestBody UpdateBillStatusRequest request) {
-        BillDto bill = billService.updateBillStatus(id, request);
-        return ResponseEntity.ok(bill);
-    }
-
-    @PostMapping("/{id}/payments")
-    public ResponseEntity<BillDto> recordPayment(@PathVariable Long id, @RequestBody RecordPaymentRequest request) {
-        BillDto bill = billService.recordPayment(id, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bill);
-    }
-
     // =============================================
     // BILL QUERIES
     // =============================================
@@ -74,19 +62,19 @@ public class BillController {
         return ResponseEntity.ok(billService.getBillsByCustomer(custId, page, size));
     }
 
-    @GetMapping("/type/{type}")
-    public ResponseEntity<Page<BillDto>> getBillsByType(
-            @PathVariable BillType type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(billService.getBillsByType(type, page, size));
-    }
-
     @GetMapping
     public ResponseEntity<Page<BillDto>> getAllBills(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(billService.getAllBills(page, size));
+    }
+
+    @GetMapping("/type/{billType}")
+    public ResponseEntity<Page<BillDto>> getBillsByType(
+            @PathVariable BillType billType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(billService.getBillsByType(billType, page, size));
     }
 
     // =============================================

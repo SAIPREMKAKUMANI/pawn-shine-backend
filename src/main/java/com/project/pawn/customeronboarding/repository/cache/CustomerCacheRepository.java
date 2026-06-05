@@ -58,6 +58,13 @@ public class CustomerCacheRepository {
         return idProofRepository.existsByIdNumber(idNumber);
     }
 
+    public boolean existsByIdProofNumberAndCustIdNot(String idNumber, Long custId) {
+        if (idNumber == null) {
+            return false;
+        }
+        return idProofRepository.existsByIdNumberAndCustomer_CustIdNot(idNumber, custId);
+    }
+
     public GetCustomerResponse getCustomersFromCache() {
         log.info("Fetching all customers from cache");
 

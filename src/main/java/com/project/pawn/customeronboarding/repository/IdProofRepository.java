@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IdProofRepository extends JpaRepository<IdProofInfo, Long> {
     boolean existsByIdNumber(String idNumber);
+    boolean existsByIdNumberAndCustomer_CustIdNot(String idNumber, Long custId);
 }
 

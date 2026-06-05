@@ -12,6 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class IdProofDto {
+    @JsonProperty("id_proof_id")
+    private Long idProofId;
+
     @JsonProperty("cust_id")
     private Long custId;
 

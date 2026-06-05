@@ -9,6 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 public class ContactDto {
 
+    @JsonProperty("contact_id")
+    private Long contactId;
+
     @JsonProperty("cust_id")
     private Long custId;
 

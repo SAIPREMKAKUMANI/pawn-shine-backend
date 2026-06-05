@@ -1,0 +1,73 @@
+# ============================================================
+# Pawn Shine — Private Instance (Backend + Database)
+# Run on: Private subnet instance (NO public IP)
+#
+# This compose file runs the Spring Boot backend and PostgreSQL.
+# The backend is exposed on port 8080 so the public instance's
+# Nginx can reach it over the Oracle VCN internal network.
+# The database is NOT exposed outside Docker — only the backend
+# container can reach it.
+# ============================================================
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pawn_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pawnbroking}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./pawn-backend/db-scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  backend:
+    build:
+      context: ./pawn-backend
+      dockerfile: Dockerfile
+    container_name: pawn_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB:-pawnbroking}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - pawn_images:/projects/pawn-images
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - backend_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+volumes:
+  pgdata:
+  pawn_images:
+
+networks:
+  backend_network:
+    driver: bridge

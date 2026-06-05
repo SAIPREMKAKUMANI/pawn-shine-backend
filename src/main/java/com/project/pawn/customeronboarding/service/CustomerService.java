@@ -41,6 +41,7 @@ public class CustomerService {
 
         Long custId = customerCacheHandler.saveCustomerAndGetId(request);
         imageService.uploadAllImagesToDisk(request, custId);
+        customerCacheHandler.updateImageUrls(custId, request);
 
         log.info("Successfully onboarded customer: {}, id: {}", request.getName(), custId);
 

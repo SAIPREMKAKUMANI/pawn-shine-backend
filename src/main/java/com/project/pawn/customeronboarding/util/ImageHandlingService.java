@@ -28,18 +28,27 @@ public class ImageHandlingService {
     public void uploadAllImagesToDisk(CustomerDto request, Long custId) {
         log.info("Uploading images for customer: {}", request.getName());
 
-        request.setImageUrl(uploadImageSafe(request.getImage(), custId, PROFILE));
+        String profileImageUrl = uploadImageSafe(request.getImage(), custId, PROFILE);
+        if (profileImageUrl != null) {
+            request.setImageUrl(profileImageUrl);
+        }
 
         if (request.getIdProofs() != null) {
-            request.getIdProofs().forEach(idProof ->
-                    idProof.setImageUrl(uploadImageSafe(idProof.getImage(), custId, idProof.getIdType()))
-            );
+            request.getIdProofs().forEach(idProof -> {
+                String proofImageUrl = uploadImageSafe(idProof.getImage(), custId, idProof.getIdType());
+                if (proofImageUrl != null) {
+                    idProof.setImageUrl(proofImageUrl);
+                }
+            });
         }
 
         if (request.getRelatives() != null) {
-            request.getRelatives().forEach(relative ->
-                    relative.setImageUrl(uploadImageSafe(relative.getImage(), custId, RELATIVE))
-            );
+            request.getRelatives().forEach(relative -> {
+                String relImageUrl = uploadImageSafe(relative.getImage(), custId, RELATIVE);
+                if (relImageUrl != null) {
+                    relative.setImageUrl(relImageUrl);
+                }
+            });
         }
 
         log.info("All images uploaded successfully for customer: {}", request.getName());
@@ -77,7 +86,7 @@ public class ImageHandlingService {
             throw new GenericCustomerOnboardingException("Invalid file path during " + type + " image upload");
         }
 
-        return filePath.toString();
+        return "/api/images/" + custId + "/" + type.name() + "." + fileExtension;
     }
 
     /**

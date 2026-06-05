@@ -1,6 +1,7 @@
 package com.project.pawn.billing.model;
 
-import com.project.pawn.billing.enums.BillStatus;
+import com.project.pawn.billing.enums.BillType;
+import com.project.pawn.wallet.model.WalletDepositAllocation;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,8 +30,10 @@ public class Bill {
     @Column(name = "cust_id", nullable = false)
     private Long custId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "bill_type", nullable = false, length = 10)
-    private String billType;
+    @Builder.Default
+    private BillType billType = BillType.PLEDGE;
 
     @Column(name = "total_amount_lended", nullable = false, precision = 15, scale = 2)
     @Builder.Default
@@ -50,10 +53,6 @@ public class Bill {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "status", nullable = false, length = 20)
-    @Builder.Default
-    private String status = BillStatus.ACTIVE.name();
-
     @Column(name = "created_by", length = 100)
     private String createdBy;
 
@@ -70,6 +69,13 @@ public class Bill {
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<BillAccount> billAccounts = new ArrayList<>();
+
+    /**
+     * Transient holder for wallet allocations during redemption processing.
+     * Not persisted — allocations are saved separately via WalletDepositAllocationRepository.
+     */
+    @Transient
+    private List<WalletDepositAllocation> walletAllocations;
 
     @PrePersist
     protected void onCreate() {

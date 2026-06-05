@@ -162,20 +162,6 @@ public class ItemService {
         itemRepository.save(item);
     }
 
-    /**
-     * Records a partial payment on an active item.
-     */
-    @Transactional
-    public Item recordPayment(Long itemId, BigDecimal paymentAmount) {
-        Item item = findItemOrThrow(itemId);
-        validateItemStatus(item, ItemStatus.ACTIVE, ItemStatus.HOLD);
-
-        item.setPaidAmount(item.getPaidAmount().add(paymentAmount));
-        Item saved = itemRepository.save(item);
-        log.info("Payment of {} recorded on item {}", paymentAmount, itemId);
-        return saved;
-    }
-
     // --- Dashboard queries ---
 
     public Map<String, Object> getDashboardStats() {

@@ -8,6 +8,9 @@ import lombok.*;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class AddressDto {
+    @JsonProperty("address_id")
+    private Long addressId;
+
     @JsonProperty("cust_id")
     private Long custId;
 

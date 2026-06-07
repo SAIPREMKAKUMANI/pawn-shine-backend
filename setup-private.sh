@@ -34,45 +34,34 @@ echo "============================================================"
 # -----------------------------------------------------------
 # 1. Update and Upgrade System Packages
 # -----------------------------------------------------------
-echo "[1/8] Updating and upgrading system packages..."
+echo "[1/7] Updating and upgrading system packages..."
 sudo apt-get update && sudo apt-get upgrade -y
 
 # -----------------------------------------------------------
 # 2. Install Docker and utilities
 # -----------------------------------------------------------
-echo "[2/8] Installing Docker and utilities..."
+echo "[2/7] Installing Docker and utilities..."
 sudo apt-get install -y docker.io docker-compose-v2 git curl wget unzip iptables-persistent netfilter-persistent
 
 # -----------------------------------------------------------
 # 3. Enable Docker and add user to docker group
 # -----------------------------------------------------------
-echo "[3/8] Enabling Docker service..."
+echo "[3/7] Enabling Docker service..."
 sudo systemctl enable docker
 sudo systemctl start docker
 sudo usermod -aG docker ubuntu
 
 # -----------------------------------------------------------
-# 4. Configure firewall
-#
-# Port 8080 is ONLY accessible from within the Oracle VCN.
-# No ports 80/443 — this instance doesn't serve web traffic.
+# 4. Create deployment directory
 # -----------------------------------------------------------
-echo "[4/8] Configuring firewall (port 8080, VCN-only access)..."
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp -s 10.0.0.0/16 --dport 8080 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 8080 -j DROP
-sudo netfilter-persistent save
-
-# -----------------------------------------------------------
-# 5. Create deployment directory
-# -----------------------------------------------------------
-echo "[5/8] Creating deployment directory..."
+echo "[4/7] Creating deployment directory..."
 mkdir -p "$DEPLOY_DIR/backups"
 cd "$DEPLOY_DIR"
 
 # -----------------------------------------------------------
 # 6. Clone backend repository (ONLY backend — no frontend)
 # -----------------------------------------------------------
-echo "[6/8] Cloning backend repository (Branch: $DEPLOY_BRANCH)..."
+echo "[5/7] Cloning backend repository (Branch: $DEPLOY_BRANCH)..."
 if [ ! -d "pawn-backend" ]; then
     git clone -b "$DEPLOY_BRANCH" https://github.com/SAIPREMKAKUMANI/pawn-shine-backend.git pawn-backend
 else
@@ -82,8 +71,8 @@ fi
 # -----------------------------------------------------------
 # 7. Copy configuration files and set up environment
 # -----------------------------------------------------------
-echo "[7/8] Setting up configuration files..."
-cp "$DEPLOY_DIR/pawn-backend/docker-compose.private.yml" "$DEPLOY_DIR/docker-compose.yml"
+echo "[6/7] Setting up configuration files..."
+cp "$DEPLOY_DIR/pawn-backend/docker-compose.yml" "$DEPLOY_DIR/docker-compose.yml"
 
 # Create .env from template if it doesn't exist
 if [ ! -f "$DEPLOY_DIR/.env" ]; then
@@ -103,9 +92,9 @@ chmod +x "$DEPLOY_DIR/backup.sh"
 chmod +x "$DEPLOY_DIR/update.sh"
 
 # -----------------------------------------------------------
-# 8. Set up daily backup cron job (2 AM)
+# 7. Set up daily backup cron job (2 AM)
 # -----------------------------------------------------------
-echo "[8/8] Setting up daily backup cron job (2 AM)..."
+echo "[7/7] Setting up daily backup cron job (2 AM)..."
 (crontab -l 2>/dev/null; echo '0 2 * * * /home/ubuntu/pawn-deploy/backup.sh >> /home/ubuntu/pawn-deploy/backups/backup.log 2>&1') | crontab -
 
 # -----------------------------------------------------------

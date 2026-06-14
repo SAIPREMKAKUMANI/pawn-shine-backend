@@ -74,6 +74,10 @@ fi
 echo "[6/7] Setting up configuration files..."
 cp "$DEPLOY_DIR/pawn-backend/docker-compose.yml" "$DEPLOY_DIR/docker-compose.yml"
 
+# Open port 8080 in the firewall (VCN only, no public IP)
+sudo iptables -I INPUT 1 -p tcp --dport 8080 -j ACCEPT
+sudo netfilter-persistent save
+
 # Create .env from template if it doesn't exist
 if [ ! -f "$DEPLOY_DIR/.env" ]; then
     cp "$DEPLOY_DIR/pawn-backend/.env.example" "$DEPLOY_DIR/.env"

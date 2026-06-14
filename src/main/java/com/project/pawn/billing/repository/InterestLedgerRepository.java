@@ -17,8 +17,6 @@ public interface InterestLedgerRepository extends JpaRepository<InterestLedger, 
 
     Optional<InterestLedger> findTopByItemIdOrderByLedgerDateDesc(Long itemId);
 
-    boolean existsByItemIdAndLedgerDate(Long itemId, LocalDate ledgerDate);
-
     @Query("SELECT il FROM InterestLedger il WHERE il.itemId = :itemId AND il.ledgerDate BETWEEN :from AND :to ORDER BY il.ledgerDate ASC")
     List<InterestLedger> findByItemIdAndDateRange(
             @Param("itemId") Long itemId,

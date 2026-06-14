@@ -16,15 +16,11 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     Optional<Bill> findByBillId(String billId);
 
-    List<Bill> findByCustId(Long custId);
-
     Page<Bill> findByCustIdOrderByBillDateDesc(Long custId, Pageable pageable);
 
     Page<Bill> findByBillTypeOrderByBillDateDesc(BillType billType, Pageable pageable);
 
     Page<Bill> findAllByOrderByBillDateDesc(Pageable pageable);
-
-    List<Bill> findByBillDateBetween(LocalDate from, LocalDate to);
 
     boolean existsByBillId(String billId);
 }

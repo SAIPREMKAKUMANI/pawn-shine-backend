@@ -1,4 +1,4 @@
-package com.project.pawn.billing.dto;
+package com.project.pawn.billing.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RecordInterestRequest {
+public class RecordInterestRequestDto {
 
     @JsonProperty("item_id")
     private Long itemId;

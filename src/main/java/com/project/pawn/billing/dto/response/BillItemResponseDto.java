@@ -1,20 +1,22 @@
-package com.project.pawn.billing.dto;
+package com.project.pawn.billing.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BillItemDto {
+public class BillItemResponseDto {
 
     @JsonProperty("item_id")
     private Long itemId;
 
+    //KEPT or RELEASED state
     @JsonProperty("action")
     private String action;
 
@@ -28,9 +30,6 @@ public class BillItemDto {
 
     @JsonProperty("description")
     private String description;
-
-    @JsonProperty("image_url")
-    private String imageUrl;
 
     @JsonProperty("weight_gross")
     private BigDecimal weightGross;
@@ -49,4 +48,7 @@ public class BillItemDto {
 
     @JsonProperty("grace_period_days")
     private Integer gracePeriodDays;
+
+    @JsonProperty("item_images")
+    private List<String> itemImage;
 }

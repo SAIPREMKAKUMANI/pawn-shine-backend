@@ -1,7 +1,7 @@
 package com.project.pawn.wallet.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.pawn.billing.dto.BillAccountDto;
+import com.project.pawn.billing.dto.response.BillAccountResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +20,7 @@ public class WalletDepositRequest {
     private BigDecimal amount;
 
     @JsonProperty("accounts")
-    private List<BillAccountDto> accounts;
+    private List<BillAccountResponseDto> accounts;
 
     @JsonProperty("notes")
     private String notes;

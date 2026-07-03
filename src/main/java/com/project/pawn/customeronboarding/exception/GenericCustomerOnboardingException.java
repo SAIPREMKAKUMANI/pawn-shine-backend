@@ -1,5 +1,6 @@
 package com.project.pawn.customeronboarding.exception;
 
+import com.project.pawn.common.exception.ErrorDetail;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

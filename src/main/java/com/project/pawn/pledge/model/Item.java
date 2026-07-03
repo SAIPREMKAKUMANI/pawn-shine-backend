@@ -1,11 +1,14 @@
 package com.project.pawn.pledge.model;
 
+import com.project.pawn.billing.model.ItemImage;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,9 +31,6 @@ public class Item {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
 
     @Column(name = "weight_gross", nullable = false, precision = 10, scale = 3)
     private BigDecimal weightGross;
@@ -86,6 +86,10 @@ public class Item {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<ItemImage> itemImages = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

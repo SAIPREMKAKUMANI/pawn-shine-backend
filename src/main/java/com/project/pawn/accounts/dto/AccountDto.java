@@ -31,6 +31,12 @@ public class AccountDto {
     @JsonProperty("is_active")
     private Boolean isActive;
 
+    @JsonProperty("disbursed_amount")
+    private BigDecimal disbursedAmount;
+
+    @JsonProperty("repaid_amount")
+    private BigDecimal repaidAmount;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 

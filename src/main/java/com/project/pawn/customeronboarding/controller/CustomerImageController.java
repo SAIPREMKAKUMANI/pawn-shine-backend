@@ -16,7 +16,7 @@ import java.time.Duration;
 @Slf4j
 @RestController
 @RequestMapping("/api/images")
-public class ImageController {
+public class CustomerImageController {
 
     private static final Path BASE_PATH = Path.of("/projects/pawn-images");
 
@@ -41,7 +41,7 @@ public class ImageController {
         }
 
         if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            log.debug("Image not found: {}", filePath);
+            log.info("Image not found: {}", filePath);
             return ResponseEntity.notFound().build();
         }
 

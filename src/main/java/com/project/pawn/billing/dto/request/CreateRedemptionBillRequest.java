@@ -1,7 +1,7 @@
-package com.project.pawn.billing.dto;
+package com.project.pawn.billing.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,21 +16,17 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateRedemptionBillRequest {
 
-    @JsonProperty("cust_id")
     private Long custId;
 
-    @JsonProperty("item_ids")
     private List<Long> itemIds;
 
-    @JsonProperty("wallet_amount_used")
     private BigDecimal walletAmountUsed;
 
-    @JsonProperty("accounts")
-    private List<BillAccountDto> accounts;
+    private List<BillAccountRequestDto> accounts;
 
-    @JsonProperty("notes")
     private String notes;
 
-    @JsonProperty("bill_date")
     private LocalDate billDate;
+
+    private List<MultipartFile> itemImages;
 }

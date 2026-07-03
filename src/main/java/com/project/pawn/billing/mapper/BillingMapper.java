@@ -1,6 +1,7 @@
 package com.project.pawn.billing.mapper;
 
-import com.project.pawn.billing.dto.*;
+import com.project.pawn.billing.dto.response.BillResponseDto;
+import com.project.pawn.billing.dto.response.InterestLedgerResponseDto;
 import com.project.pawn.billing.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,9 +14,9 @@ public interface BillingMapper {
     @Mapping(target = "customerName", ignore = true)
     @Mapping(target = "items", source = "billItems")
     @Mapping(target = "accounts", source = "billAccounts")
-    BillDto toBillDto(Bill entity);
+    BillResponseDto toBillDto(Bill entity);
 
-    InterestLedgerDto toInterestLedgerDto(InterestLedger entity);
+    InterestLedgerResponseDto toInterestLedgerDto(InterestLedger entity);
 
-    List<InterestLedgerDto> toInterestLedgerDtoList(List<InterestLedger> entities);
+    List<InterestLedgerResponseDto> toInterestLedgerDtoList(List<InterestLedger> entities);
 }

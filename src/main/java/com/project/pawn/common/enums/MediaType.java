@@ -1,4 +1,4 @@
-package com.project.pawn.customeronboarding.enums;
+package com.project.pawn.common.enums;
 
 public enum MediaType {
     PROFILE,
@@ -8,5 +8,7 @@ public enum MediaType {
     PAN,
     PASSPORT,
     VOTER_ID,
-    DRIVING_LICENSE
+    DRIVING_LICENSE,
+    PLEDGE_ITEM_IMAGE,
+    REDEEM_ITEM_IMAGE,
 }

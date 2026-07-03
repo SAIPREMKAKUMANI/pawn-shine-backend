@@ -1,4 +1,4 @@
-package com.project.pawn.billing.dto;
+package com.project.pawn.billing.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.pawn.billing.enums.BillType;
@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BillDto {
+public class BillResponseDto {
 
     @JsonProperty("id")
     private Long id;
@@ -53,10 +53,10 @@ public class BillDto {
     private LocalDateTime createdAt;
 
     @JsonProperty("items")
-    private List<BillItemDto> items;
+    private List<BillItemResponseDto> items;
 
     @JsonProperty("accounts")
-    private List<BillAccountDto> accounts;
+    private List<BillAccountResponseDto> accounts;
 
     @JsonProperty("wallet_allocations")
     private List<WalletAllocationDto> walletAllocations;

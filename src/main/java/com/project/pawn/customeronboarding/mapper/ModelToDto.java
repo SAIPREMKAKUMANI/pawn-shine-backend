@@ -29,7 +29,7 @@ public interface ModelToDto {
 
     @Mapping(
             target = "idType",
-            expression = "java(source.getIdType() != null ? com.project.pawn.customeronboarding.enums.MediaType.valueOf(source.getIdType()) : null)"
+            expression = "java(source.getIdType() != null ? com.project.pawn.common.enums.MediaType.valueOf(source.getIdType()) : null)"
     )
     IdProofDto toIdProofDto(IdProofInfo source);
 

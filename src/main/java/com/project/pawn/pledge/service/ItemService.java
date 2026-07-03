@@ -37,18 +37,13 @@ public class ItemService {
     public Item createItem(Long custId, Long ornamentId, String description,
                            BigDecimal weightGross, BigDecimal weightNet,
                            BigDecimal amountLended, BigDecimal interestRate,
-                           String location, LocalDate dueDate, Integer gracePeriodDays,
-                           String imageUrl) {
+                           String location, LocalDate dueDate, Integer gracePeriodDays) {
         log.info("Creating pledged item for customer {} ornament {}", custId, ornamentId);
-
-        validateCustomerExists(custId);
-        ornamentService.findOrnamentOrThrow(ornamentId);
 
         Item item = Item.builder()
                 .custId(custId)
                 .ornamentId(ornamentId)
                 .description(description)
-                .imageUrl(imageUrl)
                 .weightGross(weightGross)
                 .weightNet(weightNet)
                 .amountLended(amountLended)

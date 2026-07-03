@@ -7,7 +7,6 @@ import com.project.pawn.customeronboarding.exception.CustomerValidationException
 import com.project.pawn.customeronboarding.model.CustomerInfo;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.customeronboarding.repository.cache.CustomerCacheRepository;
-import com.project.pawn.customeronboarding.util.ImageHandlingService;
 import com.project.pawn.customeronboarding.validation.CustomerValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerValidator customerValidator;
     private final CustomerCacheHandler customerCacheHandler;
-    private final ImageHandlingService imageService;
+    private final CustomerImageHandler customerImageHandler;
     private final ModelToDto modelToDto;
 
     @Transactional
@@ -40,7 +39,7 @@ public class CustomerService {
         customerValidator.validateCustomer(request);
 
         Long custId = customerCacheHandler.saveCustomerAndGetId(request);
-        imageService.uploadAllImagesToDisk(request, custId);
+        customerImageHandler.uploadAllImagesToDisk(request, custId);
         customerCacheHandler.updateImageUrls(custId, request);
 
         log.info("Successfully onboarded customer: {}, id: {}", request.getName(), custId);
@@ -62,7 +61,7 @@ public class CustomerService {
             throw new CustomerValidationException("Customer with ID " + id + " not found");
         }
 
-        imageService.uploadAllImagesToDisk(request, id);
+        customerImageHandler.uploadAllImagesToDisk(request, id);
         customerCacheHandler.updateCustomer(id, request);
 
         log.info("Successfully updated customer with ID: {}", id);

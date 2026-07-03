@@ -40,12 +40,6 @@ public class AccountService {
         return accountMapper.toDto(account);
     }
 
-    public AccountDto getAccountByNumber(String accountNumber) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountNumber));
-        return accountMapper.toDto(account);
-    }
-
     public List<AccountDto> getAllActiveAccounts() {
         return accountMapper.toDtoList(accountRepository.findByIsActiveTrue());
     }
@@ -89,6 +83,16 @@ public class AccountService {
     @Transactional
     public BigDecimal adjustBalance(Long accountId, BigDecimal amount, TransactionType type) {
         Account account = findAccountOrThrow(accountId);
+        BigDecimal totalDisbursed = account.getDisbursedAmount();
+        BigDecimal totalRepaid = account.getRepaidAmount();
+
+        if (TransactionType.CREDIT.equals(type)) {
+            totalRepaid = totalRepaid.add(amount);
+            account.setRepaidAmount(totalRepaid);
+        } else if (TransactionType.DEBIT.equals(type)) {
+            totalDisbursed = totalDisbursed.add(amount);
+            account.setDisbursedAmount(totalDisbursed);
+        }
 
         BigDecimal newBalance = switch (type) {
             case CREDIT -> account.getBalance().add(amount);
@@ -100,10 +104,6 @@ public class AccountService {
         log.info("Account {} balance adjusted by {} ({}). New balance: {}",
                 accountId, amount, type, newBalance);
         return newBalance;
-    }
-
-    public BigDecimal getBalance(Long accountId) {
-        return findAccountOrThrow(accountId).getBalance();
     }
 
     // --- Private helpers ---

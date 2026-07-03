@@ -1,7 +1,7 @@
 package com.project.pawn.customeronboarding.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.pawn.customeronboarding.enums.MediaType;
+import com.project.pawn.common.enums.MediaType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;

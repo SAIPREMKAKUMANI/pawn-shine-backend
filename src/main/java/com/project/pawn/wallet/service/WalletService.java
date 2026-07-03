@@ -2,7 +2,7 @@ package com.project.pawn.wallet.service;
 
 import com.project.pawn.accounts.enums.TransactionType;
 import com.project.pawn.accounts.service.TransactionService;
-import com.project.pawn.billing.dto.BillAccountDto;
+import com.project.pawn.billing.dto.response.BillAccountResponseDto;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.wallet.dto.CustomerWalletDto;
 import com.project.pawn.wallet.dto.WalletAllocationDto;
@@ -78,7 +78,7 @@ public class WalletService {
         }
 
         BigDecimal totalAccountsAmount = request.getAccounts().stream()
-                .map(BillAccountDto::getAmount)
+                .map(BillAccountResponseDto::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (totalAccountsAmount.compareTo(request.getAmount()) != 0) {
@@ -103,7 +103,7 @@ public class WalletService {
         transactionRepository.save(tx);
 
         // Record money IN to the owner's accounts
-        for (BillAccountDto acctReq : request.getAccounts()) {
+        for (BillAccountResponseDto acctReq : request.getAccounts()) {
             globalTransactionService.recordTransaction(
                     acctReq.getAccountId(),
                     acctReq.getAmount(),

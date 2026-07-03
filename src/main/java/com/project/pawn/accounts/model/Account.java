@@ -42,6 +42,14 @@ public class Account {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "disbursed_amount", nullable = false, precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal disbursedAmount = BigDecimal.ZERO;
+
+    @Column(name = "repaid_amount", nullable = false, precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal repaidAmount = BigDecimal.ZERO;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

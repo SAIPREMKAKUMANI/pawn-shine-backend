@@ -1,6 +1,6 @@
 package com.project.pawn.billing.service;
 
-import com.project.pawn.billing.dto.InterestLedgerDto;
+import com.project.pawn.billing.dto.response.InterestLedgerResponseDto;
 import com.project.pawn.billing.mapper.BillingMapper;
 import com.project.pawn.billing.model.InterestLedger;
 import com.project.pawn.billing.repository.InterestLedgerRepository;
@@ -42,7 +42,7 @@ public class InterestService {
      * @return the recorded ledger entry
      */
     @Transactional
-    public InterestLedgerDto recordInterest(Long itemId, BigDecimal interestAmount) {
+    public InterestLedgerResponseDto recordInterest(Long itemId, BigDecimal interestAmount) {
         Item item = itemService.findItemOrThrow(itemId);
 
         BigDecimal previousCumulative = item.getCompoundInterest();
@@ -78,7 +78,7 @@ public class InterestService {
      * Use case: Owner realizes they set wrong interest and wants to fix it.
      */
     @Transactional
-    public InterestLedgerDto setTotalInterest(Long itemId, BigDecimal totalInterest) {
+    public InterestLedgerResponseDto setTotalInterest(Long itemId, BigDecimal totalInterest) {
         Item item = itemService.findItemOrThrow(itemId);
 
         BigDecimal previousCumulative = item.getCompoundInterest();
@@ -105,17 +105,17 @@ public class InterestService {
         return billingMapper.toInterestLedgerDto(entry);
     }
 
-    public List<InterestLedgerDto> getInterestHistory(Long itemId) {
+    public List<InterestLedgerResponseDto> getInterestHistory(Long itemId) {
         List<InterestLedger> entries = interestLedgerRepository.findByItemIdOrderByLedgerDateDesc(itemId);
         return billingMapper.toInterestLedgerDtoList(entries);
     }
 
-    public List<InterestLedgerDto> getInterestHistoryByDateRange(Long itemId, LocalDate from, LocalDate to) {
+    public List<InterestLedgerResponseDto> getInterestHistoryByDateRange(Long itemId, LocalDate from, LocalDate to) {
         List<InterestLedger> entries = interestLedgerRepository.findByItemIdAndDateRange(itemId, from, to);
         return billingMapper.toInterestLedgerDtoList(entries);
     }
 
-    public InterestLedgerDto getCurrentInterestState(Long itemId) {
+    public InterestLedgerResponseDto getCurrentInterestState(Long itemId) {
         return interestLedgerRepository.findTopByItemIdOrderByLedgerDateDesc(itemId)
                 .map(billingMapper::toInterestLedgerDto)
                 .orElse(null);

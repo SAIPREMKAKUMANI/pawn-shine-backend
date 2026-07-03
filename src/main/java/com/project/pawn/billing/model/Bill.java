@@ -70,6 +70,10 @@ public class Bill {
     @Builder.Default
     private List<BillAccount> billAccounts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "bill", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<ItemImage> itemImages = new ArrayList<>();
+
     /**
      * Transient holder for wallet allocations during redemption processing.
      * Not persisted — allocations are saved separately via WalletDepositAllocationRepository.

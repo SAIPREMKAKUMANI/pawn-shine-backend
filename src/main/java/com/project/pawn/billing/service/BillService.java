@@ -2,7 +2,11 @@ package com.project.pawn.billing.service;
 
 import com.project.pawn.accounts.enums.TransactionType;
 import com.project.pawn.accounts.service.TransactionService;
-import com.project.pawn.billing.dto.*;
+import com.project.pawn.billing.dto.request.BillAccountRequestDto;
+import com.project.pawn.billing.dto.request.BillItemRequestDto;
+import com.project.pawn.billing.dto.request.CreatePledgeBillRequest;
+import com.project.pawn.billing.dto.request.CreateRedemptionBillRequest;
+import com.project.pawn.billing.dto.response.BillResponseDto;
 import com.project.pawn.billing.enums.BillItemAction;
 import com.project.pawn.billing.enums.BillType;
 import com.project.pawn.billing.enums.PaymentDirection;
@@ -12,6 +16,8 @@ import com.project.pawn.billing.model.BillAccount;
 import com.project.pawn.billing.model.BillItem;
 import com.project.pawn.billing.repository.BillItemRepository;
 import com.project.pawn.billing.repository.BillRepository;
+import com.project.pawn.billing.service.validations.BillValidationService;
+import com.project.pawn.common.enums.MediaType;
 import com.project.pawn.customeronboarding.model.CustomerInfo;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.pledge.model.Item;
@@ -55,7 +61,8 @@ public class BillService {
     private final BillingMapper billingMapper;
     private final WalletService walletService;
     private final WalletDepositAllocationRepository allocationRepository;
-
+    private final BillValidationService billValidationService;
+    private final ImageHandler imageHandler;
     /**
      * Creates a PLEDGE bill — lending money, keeping items as collateral.
      *
@@ -66,12 +73,14 @@ public class BillService {
      * 4. Record transactions (money OUT from owner accounts)
      */
     @Transactional
-    public BillDto createPledgeBill(CreatePledgeBillRequest request) {
+    public BillResponseDto createPledgeBill(CreatePledgeBillRequest request) {
         log.info("Creating pledge bill for customer {}", request.getCustId());
 
-        validateCustomerExists(request.getCustId());
-        validateItemsNotEmpty(request.getItems());
-        validateAccountsNotEmpty(request.getAccounts());
+        billValidationService.validateCustomerExists(request.getCustId());
+        billValidationService.validateItemsNotEmpty(request.getItems());
+        billValidationService.validateItems(request.getItems());
+        billValidationService.validateAccountsNotEmpty(request.getAccounts());
+        billValidationService.validateAccounts(request.getAccounts());
 
         Bill bill = Bill.builder()
                 .billId(generateBillId())
@@ -80,11 +89,10 @@ public class BillService {
                 .notes(request.getNotes())
                 .createdBy(MDC.get(USERNAME))
                 .build();
-
         BigDecimal totalLended = BigDecimal.ZERO;
 
         // Create each pledged item and add to bill
-        for (BillItemDto itemReq : request.getItems()) {
+        for (BillItemRequestDto itemReq : request.getItems()) {
             Item createdItem = itemService.createItem(
                     request.getCustId(),
                     itemReq.getOrnamentId(),
@@ -95,12 +103,12 @@ public class BillService {
                     itemReq.getInterestRate(),
                     itemReq.getLocation(),
                     itemReq.getDueDate(),
-                    itemReq.getGracePeriodDays(),
-                    itemReq.getImageUrl()
+                    itemReq.getGracePeriodDays()
             );
+            imageHandler.uploadItemImages(createdItem, bill, itemReq.getItemImage(), MediaType.PLEDGE_ITEM_IMAGE);
 
             BillItem billItem = BillItem.builder()
-                    .itemId(createdItem.getId()) //TODO: Need to set the billId too.
+                    .itemId(createdItem.getId())
                     .action(BillItemAction.KEPT.name())
                     .amount(itemReq.getAmount())
                     .build();
@@ -112,7 +120,7 @@ public class BillService {
         bill.setTotalAmountLended(totalLended);
 
         // Add payment accounts (money going OUT)
-        for (BillAccountDto acctReq : request.getAccounts()) {
+        for (BillAccountRequestDto acctReq : request.getAccounts()) {
             BillAccount billAccount = BillAccount.builder()
                     .accountId(acctReq.getAccountId())
                     .amount(acctReq.getAmount())
@@ -124,7 +132,7 @@ public class BillService {
         Bill savedBill = billRepository.save(bill);
 
         // Record transactions for each account (money leaving)
-        for (BillAccountDto acctReq : request.getAccounts()) {
+        for (BillAccountRequestDto acctReq : request.getAccounts()) {
             transactionService.recordTransaction(
                     acctReq.getAccountId(),
                     acctReq.getAmount(),
@@ -149,10 +157,10 @@ public class BillService {
      * 4. Record transactions (money IN to owner accounts)
      */
     @Transactional
-    public BillDto createRedemptionBill(CreateRedemptionBillRequest request) {
+    public BillResponseDto createRedemptionBill(CreateRedemptionBillRequest request) {
         log.info("Creating redemption bill for customer {}", request.getCustId());
 
-        validateCustomerExists(request.getCustId());
+        billValidationService.validateCustomerExists(request.getCustId());
         
         boolean hasAccounts = request.getAccounts() != null && !request.getAccounts().isEmpty();
         boolean usesWallet = request.getWalletAmountUsed() != null && request.getWalletAmountUsed().compareTo(BigDecimal.ZERO) > 0;
@@ -193,9 +201,15 @@ public class BillService {
             totalPrincipal = totalPrincipal.add(item.getAmountLended());
             totalInterest = totalInterest.add(item.getCompoundInterest());
             totalPayment = totalPayment.add(outstanding);
+
+            // Upload customer pickup photos for each redeemed item
+            if (request.getItemImages() != null && !request.getItemImages().isEmpty()) {
+                billValidationService.validateItemImages(request.getItemImages());
+                imageHandler.uploadItemImages(item, bill, request.getItemImages(), MediaType.REDEEM_ITEM_IMAGE);
+            }
         }
 
-        BigDecimal sumAccounts = hasAccounts ? request.getAccounts().stream().map(BillAccountDto::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+        BigDecimal sumAccounts = hasAccounts ? request.getAccounts().stream().map(BillAccountRequestDto::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
         BigDecimal walletAmount = usesWallet ? request.getWalletAmountUsed() : BigDecimal.ZERO;
 
         if (sumAccounts.add(walletAmount).compareTo(totalPayment) != 0) {
@@ -227,7 +241,7 @@ public class BillService {
 
         // Add payment accounts (money coming IN)
         if (hasAccounts) {
-            for (BillAccountDto acctReq : request.getAccounts()) {
+            for (BillAccountRequestDto acctReq : request.getAccounts()) {
                 BillAccount billAccount = BillAccount.builder()
                         .accountId(acctReq.getAccountId())
                         .amount(acctReq.getAmount())
@@ -249,7 +263,7 @@ public class BillService {
 
         // Record transactions for each account (money coming in)
         if (hasAccounts) {
-            for (BillAccountDto acctReq : request.getAccounts()) {
+            for (BillAccountRequestDto acctReq : request.getAccounts()) {
                 transactionService.recordTransaction(
                         acctReq.getAccountId(),
                         acctReq.getAmount(),
@@ -272,29 +286,29 @@ public class BillService {
 
     // --- Read operations ---
 
-    public BillDto getBillById(Long id) {
+    public BillResponseDto getBillById(Long id) {
         Bill bill = billRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found with ID: " + id));
         return enrichBillDto(billingMapper.toBillDto(bill));
     }
 
-    public BillDto getBillByBillId(String billId) {
+    public BillResponseDto getBillByBillId(String billId) {
         Bill bill = billRepository.findByBillId(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
         return enrichBillDto(billingMapper.toBillDto(bill));
     }
 
-    public Page<BillDto> getBillsByCustomer(Long custId, int page, int size) {
+    public Page<BillResponseDto> getBillsByCustomer(Long custId, int page, int size) {
         return billRepository.findByCustIdOrderByBillDateDesc(custId, PageRequest.of(page, size))
                 .map(bill -> enrichBillDto(billingMapper.toBillDto(bill)));
     }
 
-    public Page<BillDto> getAllBills(int page, int size) {
+    public Page<BillResponseDto> getAllBills(int page, int size) {
         return billRepository.findAllByOrderByBillDateDesc(PageRequest.of(page, size))
                 .map(bill -> enrichBillDto(billingMapper.toBillDto(bill)));
     }
 
-    public Page<BillDto> getBillsByType(BillType billType, int page, int size) {
+    public Page<BillResponseDto> getBillsByType(BillType billType, int page, int size) {
         return billRepository.findByBillTypeOrderByBillDateDesc(billType, PageRequest.of(page, size))
                 .map(bill -> enrichBillDto(billingMapper.toBillDto(bill)));
     }
@@ -335,7 +349,7 @@ public class BillService {
         return billId;
     }
 
-    private BillDto enrichBillDto(BillDto dto) {
+    private BillResponseDto enrichBillDto(BillResponseDto dto) {
         customerRepository.findById(dto.getCustId())
                 .map(CustomerInfo::getName)
                 .ifPresent(dto::setCustomerName);
@@ -351,23 +365,5 @@ public class BillService {
         }
 
         return dto;
-    }
-
-    private void validateCustomerExists(Long custId) {
-        if (!customerRepository.existsById(custId)) {
-            throw new IllegalArgumentException("Customer not found with ID: " + custId);
-        }
-    }
-
-    private void validateItemsNotEmpty(List<BillItemDto> items) {
-        if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("At least one item is required");
-        }
-    }
-
-    private void validateAccountsNotEmpty(List<BillAccountDto> accounts) {
-        if (accounts == null || accounts.isEmpty()) {
-            throw new IllegalArgumentException("At least one payment account is required");
-        }
     }
 }

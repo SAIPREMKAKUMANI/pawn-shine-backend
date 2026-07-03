@@ -1,6 +1,10 @@
 package com.project.pawn.billing.controller;
 
-import com.project.pawn.billing.dto.*;
+import com.project.pawn.billing.dto.request.CreatePledgeBillRequest;
+import com.project.pawn.billing.dto.request.CreateRedemptionBillRequest;
+import com.project.pawn.billing.dto.request.RecordInterestRequestDto;
+import com.project.pawn.billing.dto.response.BillResponseDto;
+import com.project.pawn.billing.dto.response.InterestLedgerResponseDto;
 import com.project.pawn.billing.enums.BillType;
 import com.project.pawn.billing.service.BillService;
 import com.project.pawn.billing.service.InterestService;
@@ -29,14 +33,14 @@ public class BillController {
     // =============================================
 
     @PostMapping("/pledge")
-    public ResponseEntity<BillDto> createPledgeBill(@RequestBody CreatePledgeBillRequest request) {
-        BillDto bill = billService.createPledgeBill(request);
+    public ResponseEntity<BillResponseDto> createPledgeBill(@ModelAttribute CreatePledgeBillRequest request) {
+        BillResponseDto bill = billService.createPledgeBill(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(bill);
     }
 
     @PostMapping("/redeem")
-    public ResponseEntity<BillDto> createRedemptionBill(@RequestBody CreateRedemptionBillRequest request) {
-        BillDto bill = billService.createRedemptionBill(request);
+    public ResponseEntity<BillResponseDto> createRedemptionBill(@ModelAttribute CreateRedemptionBillRequest request) {
+        BillResponseDto bill = billService.createRedemptionBill(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(bill);
     }
 
@@ -45,17 +49,17 @@ public class BillController {
     // =============================================
 
     @GetMapping("/{id}")
-    public ResponseEntity<BillDto> getBill(@PathVariable Long id) {
+    public ResponseEntity<BillResponseDto> getBill(@PathVariable Long id) {
         return ResponseEntity.ok(billService.getBillById(id));
     }
 
     @GetMapping("/ref/{billId}")
-    public ResponseEntity<BillDto> getBillByBillId(@PathVariable String billId) {
+    public ResponseEntity<BillResponseDto> getBillByBillId(@PathVariable String billId) {
         return ResponseEntity.ok(billService.getBillByBillId(billId));
     }
 
     @GetMapping("/customer/{custId}")
-    public ResponseEntity<Page<BillDto>> getBillsByCustomer(
+    public ResponseEntity<Page<BillResponseDto>> getBillsByCustomer(
             @PathVariable Long custId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -63,14 +67,14 @@ public class BillController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<BillDto>> getAllBills(
+    public ResponseEntity<Page<BillResponseDto>> getAllBills(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(billService.getAllBills(page, size));
     }
 
     @GetMapping("/type/{billType}")
-    public ResponseEntity<Page<BillDto>> getBillsByType(
+    public ResponseEntity<Page<BillResponseDto>> getBillsByType(
             @PathVariable BillType billType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -86,8 +90,8 @@ public class BillController {
      * The amount is added to the item's existing compound_interest.
      */
     @PostMapping("/interest/record")
-    public ResponseEntity<InterestLedgerDto> recordInterest(@RequestBody RecordInterestRequest request) {
-        InterestLedgerDto entry = interestService.recordInterest(
+    public ResponseEntity<InterestLedgerResponseDto> recordInterest(@RequestBody RecordInterestRequestDto request) {
+        InterestLedgerResponseDto entry = interestService.recordInterest(
                 request.getItemId(), request.getInterestAmount());
         return ResponseEntity.status(HttpStatus.CREATED).body(entry);
     }
@@ -97,19 +101,19 @@ public class BillController {
      * Use when the owner made a mistake on a previous entry.
      */
     @PutMapping("/interest/set")
-    public ResponseEntity<InterestLedgerDto> setTotalInterest(@RequestBody RecordInterestRequest request) {
-        InterestLedgerDto entry = interestService.setTotalInterest(
+    public ResponseEntity<InterestLedgerResponseDto> setTotalInterest(@RequestBody RecordInterestRequestDto request) {
+        InterestLedgerResponseDto entry = interestService.setTotalInterest(
                 request.getItemId(), request.getInterestAmount());
         return ResponseEntity.ok(entry);
     }
 
     @GetMapping("/interest/{itemId}")
-    public ResponseEntity<List<InterestLedgerDto>> getInterestHistory(@PathVariable Long itemId) {
+    public ResponseEntity<List<InterestLedgerResponseDto>> getInterestHistory(@PathVariable Long itemId) {
         return ResponseEntity.ok(interestService.getInterestHistory(itemId));
     }
 
     @GetMapping("/interest/{itemId}/range")
-    public ResponseEntity<List<InterestLedgerDto>> getInterestHistoryByRange(
+    public ResponseEntity<List<InterestLedgerResponseDto>> getInterestHistoryByRange(
             @PathVariable Long itemId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
@@ -117,8 +121,8 @@ public class BillController {
     }
 
     @GetMapping("/interest/{itemId}/current")
-    public ResponseEntity<InterestLedgerDto> getCurrentInterest(@PathVariable Long itemId) {
-        InterestLedgerDto state = interestService.getCurrentInterestState(itemId);
+    public ResponseEntity<InterestLedgerResponseDto> getCurrentInterest(@PathVariable Long itemId) {
+        InterestLedgerResponseDto state = interestService.getCurrentInterestState(itemId);
         if (state == null) {
             return ResponseEntity.noContent().build();
         }

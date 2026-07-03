@@ -1,4 +1,4 @@
-package com.project.pawn.billing.dto;
+package com.project.pawn.billing.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InterestLedgerDto {
+public class InterestLedgerResponseDto {
 
     @JsonProperty("id")
     private Long id;

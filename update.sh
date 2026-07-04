@@ -10,7 +10,7 @@
 set -euo pipefail
 
 DEPLOY_DIR=~/pawn-deploy
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-develop}"
 cd "$DEPLOY_DIR"
 
 echo "========================================"

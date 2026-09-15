@@ -22,12 +22,12 @@ public class ImageHandler {
 
     public void uploadItemImages(Item item, Bill bill, List<MultipartFile> itemImages, MediaType type) {
         for(MultipartFile image : itemImages) {
-            String imageUrl = imageHandlingService.uploadImageSafe(image, item.getId(), type);
+            String imageUrl = imageHandlingService.uploadImageSafe(image, item.getId(), item.getId(), type);
             ItemImage itemImage = ItemImage.builder()
-                    .item(item)
-                    .bill(bill)
-                    .imageUrl(imageUrl)
-                    .build();
+                .item(item)
+                .bill(bill)
+                .imageUrl(imageUrl)
+                .build();
             itemImageRepository.save(itemImage);
         }
     }

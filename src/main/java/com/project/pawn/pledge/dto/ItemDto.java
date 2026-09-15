@@ -31,9 +31,6 @@ public class ItemDto {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("image_url")
-    private String imageUrl;
-
     @JsonProperty("weight_gross")
     private BigDecimal weightGross;
 

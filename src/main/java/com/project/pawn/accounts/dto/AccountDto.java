@@ -26,16 +26,19 @@ public class AccountDto {
     private AccountType accountType;
 
     @JsonProperty("balance")
-    private BigDecimal balance;
+    @Builder.Default
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @JsonProperty("is_active")
     private Boolean isActive;
 
     @JsonProperty("disbursed_amount")
-    private BigDecimal disbursedAmount;
+    @Builder.Default
+    private BigDecimal disbursedAmount = BigDecimal.ZERO;
 
     @JsonProperty("repaid_amount")
-    private BigDecimal repaidAmount;
+    @Builder.Default
+    private BigDecimal repaidAmount = BigDecimal.ZERO;
 
     @JsonProperty("created_at")
     private LocalDateTime createdAt;

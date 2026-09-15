@@ -1,6 +1,6 @@
 package com.project.pawn.customeronboarding.service;
 
-import com.github.benmanes.caffeine.cache.Cache;
+
 import com.project.pawn.customeronboarding.dto.*;
 import com.project.pawn.customeronboarding.exception.GenericCustomerOnboardingException;
 import com.project.pawn.customeronboarding.mapper.DtoToModel;
@@ -14,8 +14,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +40,7 @@ public class CustomerCacheHandler {
      * Saves a new customer to DB and returns the auto-generated ID.
      * Caches the DTO using the generated ID.
      */
-    public Long saveCustomerAndGetId(CustomerDto customer) {
+    public CustomerInfo saveCustomer(CustomerDto customer) {
         try {
             CustomerInfo customerInfo = dtoToModel.toModel(customer);
             log.info("Converted Customer DTO to Entity for customer: {}", customer.getName());
@@ -57,7 +55,7 @@ public class CustomerCacheHandler {
             putCustomerInCache(generatedId, customer);
 
             log.info("Saved customer with auto-generated ID: {}", generatedId);
-            return generatedId;
+            return saved;
         } catch (DataAccessException ex) {
             log.error("Database error while saving customer: {}", customer.getName(), ex);
             throw new GenericCustomerOnboardingException("Error accessing the database");
@@ -265,16 +263,7 @@ public class CustomerCacheHandler {
         return customer;
     }
 
-    public List<Long> getAllKeys() {
-        CaffeineCacheManager caffeineCacheManager = (CaffeineCacheManager) cacheManager;
-        CaffeineCache cache = (CaffeineCache) caffeineCacheManager.getCache("customers");
-        Cache<Object, Object> caffeine = cache.getNativeCache();
 
-        return caffeine.asMap().keySet().stream()
-                .filter(key -> key instanceof Long)
-                .map(key -> (Long) key)
-                .toList();
-    }
 
     private void setAuditFields(CustomerInfo entity) {
         String currentUser = MDC.get(USERNAME);

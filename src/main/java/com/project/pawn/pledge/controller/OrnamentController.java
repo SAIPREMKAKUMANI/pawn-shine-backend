@@ -1,5 +1,6 @@
 package com.project.pawn.pledge.controller;
 
+import com.project.pawn.common.service.RequestSanitizationService;
 import com.project.pawn.pledge.dto.OrnamentDto;
 import com.project.pawn.pledge.service.OrnamentService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,11 @@ import java.util.List;
 public class OrnamentController {
 
     private final OrnamentService ornamentService;
+    private final RequestSanitizationService sanitizationService;
 
     @PostMapping
     public ResponseEntity<OrnamentDto> createOrnament(@RequestBody OrnamentDto request) {
+        sanitizationService.sanitize(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ornamentService.createOrnament(request));
     }
 
@@ -37,6 +40,7 @@ public class OrnamentController {
 
     @PutMapping("/{id}")
     public ResponseEntity<OrnamentDto> updateOrnament(@PathVariable Long id, @RequestBody OrnamentDto request) {
+        sanitizationService.sanitize(request);
         return ResponseEntity.ok(ornamentService.updateOrnament(id, request));
     }
 }

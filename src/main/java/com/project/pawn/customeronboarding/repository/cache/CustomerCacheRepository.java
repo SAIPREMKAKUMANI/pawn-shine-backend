@@ -1,7 +1,8 @@
 package com.project.pawn.customeronboarding.repository.cache;
 
 import com.project.pawn.customeronboarding.dto.CustomerDto;
-import com.project.pawn.customeronboarding.dto.GetCustomerResponse;
+import com.project.pawn.customeronboarding.dto.response.GetAllCustomerBaseResponse;
+import com.project.pawn.customeronboarding.dto.response.GetCustomerResponse;
 import com.project.pawn.customeronboarding.mapper.ModelToDto;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.customeronboarding.repository.IdProofRepository;
@@ -65,14 +66,10 @@ public class CustomerCacheRepository {
         return idProofRepository.existsByIdNumberAndCustomer_CustIdNot(idNumber, custId);
     }
 
-    public GetCustomerResponse getCustomersFromCache() {
-        log.info("Fetching all customers from cache");
+    public GetCustomerResponse getAllBaseCustomers() {
+        log.info("Fetching all customers base details from database");
 
-        List<Long> custIds = customerCacheHandler.getAllKeys();
-        List<CustomerDto> customers = custIds.stream()
-                .map(customerCacheHandler::getCustomer)
-                .flatMap(Optional::stream)
-                .toList();
+        List<GetAllCustomerBaseResponse> customers = customerRepository.findAllBaseCustomers();
 
         return GetCustomerResponse.builder()
                 .customers(customers)

@@ -8,6 +8,7 @@ import com.project.pawn.billing.dto.response.InterestLedgerResponseDto;
 import com.project.pawn.billing.enums.BillType;
 import com.project.pawn.billing.service.BillService;
 import com.project.pawn.billing.service.InterestService;
+import com.project.pawn.common.service.RequestSanitizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ public class BillController {
 
     private final BillService billService;
     private final InterestService interestService;
+    private final RequestSanitizationService sanitizationService;
 
     // =============================================
     // BILL CREATION
@@ -34,12 +36,14 @@ public class BillController {
 
     @PostMapping("/pledge")
     public ResponseEntity<BillResponseDto> createPledgeBill(@ModelAttribute CreatePledgeBillRequest request) {
+        sanitizationService.sanitize(request);
         BillResponseDto bill = billService.createPledgeBill(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(bill);
     }
 
     @PostMapping("/redeem")
     public ResponseEntity<BillResponseDto> createRedemptionBill(@ModelAttribute CreateRedemptionBillRequest request) {
+        sanitizationService.sanitize(request);
         BillResponseDto bill = billService.createRedemptionBill(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(bill);
     }
@@ -55,6 +59,7 @@ public class BillController {
 
     @GetMapping("/ref/{billId}")
     public ResponseEntity<BillResponseDto> getBillByBillId(@PathVariable String billId) {
+        billId = sanitizationService.sanitize(billId);
         return ResponseEntity.ok(billService.getBillByBillId(billId));
     }
 

@@ -14,11 +14,13 @@ public class CacheConfig {
 
     //I don't want to cache images in client cache.
     @Bean
-    public CaffeineCacheManager cacheManager() {
+    public CaffeineCacheManager cacheManager(CustomerCacheLoader customerCacheLoader) {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("customers");
+        cacheManager.setCacheLoader(customerCacheLoader);
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()
-                        .expireAfterWrite(Duration.ofMinutes(60))
+                        .refreshAfterWrite(Duration.ofMinutes(15))
+                        .expireAfterWrite(Duration.ofHours(24))
                         .maximumSize(10_000)
         );
         return cacheManager;

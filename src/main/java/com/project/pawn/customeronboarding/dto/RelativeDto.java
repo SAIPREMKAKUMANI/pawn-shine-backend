@@ -9,6 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class RelativeDto {
+    @Builder.Default
+    @JsonProperty("temp_id")
+    private String tempId = java.util.UUID.randomUUID().toString();
+
     @JsonProperty("relative_id")
     private Long relativeId;
 

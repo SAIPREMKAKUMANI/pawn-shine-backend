@@ -1,1 +1,22 @@
-1. Need to Add WebAuthn --> for biometric login
+1. Need to Add WebAuthn --> for biometric login --> done
+2. Need to implement the notification service.
+3. Need to add images for bill creation and redemption cases. --> bills done
+   upto 4 images for both the cases.
+
+   Since these can be large we need to compress at ui side itself.
+
+   No need to display images on the bill.
+
+   Need to send the images through notification service.
+
+4. images are not being stored properly in docker container. --> inprogress.
+5. rate limiter
+6. completion of redeem feature
+7. Sanitizer introduction --> done.
+8. need to check the cache invalidation (customers cache). --> will need to change while developing other stream(mobile app).
+9. item images controller.(think to use a generic one)
+10. Not getting revert back completely, when intentionally trying to make the application down at the middle.
+11. Cache eviction and refresh strategy. --> done
+12. why blob is coming in network tab, why the backend api call is being shown as http://localhost:{UI_PORT}/blob instead of 'http://localhost:{UI_PORT}/api/v1/...'
+
+How persistence context maintains consistent data with db in distributed systems?

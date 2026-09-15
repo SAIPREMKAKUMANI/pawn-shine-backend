@@ -96,8 +96,10 @@ public interface DtoToModel {
     @Mapping(source = "postalCode", target = "zipCode")
     AddressInfo toModel(AddressDto dto);
 
+    @Mapping(target = "tempId", source = "tempId")
     RelativeInfo toModel(RelativeDto dto);
 
+    @Mapping(target = "tempId", source = "tempId")
     @Mapping(target = "idType", expression = "java(dto.getIdType() != null ? dto.getIdType().name() : null)")
     IdProofInfo toModel(IdProofDto dto);
 }

@@ -3,6 +3,7 @@ package com.project.pawn.authentication.controller;
 import com.project.pawn.authentication.payload.AuthRequest;
 import com.project.pawn.authentication.payload.AuthResponse;
 import com.project.pawn.authentication.security.JwtUtil;
+import com.project.pawn.common.service.RequestSanitizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,9 +23,11 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final RequestSanitizationService sanitizationService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        sanitizationService.sanitize(request);
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())

@@ -1,0 +1,1 @@
+alter table bills drop column status;

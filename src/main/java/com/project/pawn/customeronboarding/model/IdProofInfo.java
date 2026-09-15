@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,6 +20,9 @@ public class IdProofInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_proof_id")
     private Long idProofId;
+
+    @Transient
+    private String tempId;
 
     @Column(name = "id_type")
     private String idType;

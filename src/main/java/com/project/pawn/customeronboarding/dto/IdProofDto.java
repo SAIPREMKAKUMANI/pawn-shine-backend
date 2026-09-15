@@ -12,6 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class IdProofDto {
+    @Builder.Default
+    @JsonProperty("temp_id")
+    private String tempId = java.util.UUID.randomUUID().toString();
+
     @JsonProperty("id_proof_id")
     private Long idProofId;
 

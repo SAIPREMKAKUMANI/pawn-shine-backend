@@ -25,8 +25,10 @@ public interface ModelToDto {
 
     ContactDto toContactDto(ContactInfo source);
 
+    @Mapping(target = "tempId", source = "tempId")
     RelativeDto toRelativeDto(RelativeInfo source);
 
+    @Mapping(target = "tempId", source = "tempId")
     @Mapping(
             target = "idType",
             expression = "java(source.getIdType() != null ? com.project.pawn.common.enums.MediaType.valueOf(source.getIdType()) : null)"

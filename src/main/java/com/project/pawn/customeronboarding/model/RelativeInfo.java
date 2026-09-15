@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,6 +20,9 @@ public class RelativeInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "relative_id")
     private Long relativeId;
+
+    @Transient
+    private String tempId;
 
     @Column(name = "name")
     private String name;

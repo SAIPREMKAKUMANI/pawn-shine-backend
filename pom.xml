@@ -16,6 +16,7 @@
 	<properties>
 		<java.version>17</java.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <apache.commons.lang3.version>3.20.0</apache.commons.lang3.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -108,6 +109,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${apache.commons.lang3.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Image compression -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
 
 	</dependencies>
 

@@ -4,6 +4,7 @@ import com.project.pawn.accounts.dto.AccountDto;
 import com.project.pawn.accounts.dto.TransactionDto;
 import com.project.pawn.accounts.service.AccountService;
 import com.project.pawn.accounts.service.TransactionService;
+import com.project.pawn.common.service.RequestSanitizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,11 +24,13 @@ public class AccountController {
 
     private final AccountService accountService;
     private final TransactionService transactionService;
+    private final RequestSanitizationService sanitizationService;
 
     // --- Account endpoints ---
 
     @PostMapping
     public ResponseEntity<AccountDto> createAccount(@RequestBody AccountDto request) {
+        sanitizationService.sanitize(request);
         AccountDto created = accountService.createAccount(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -48,6 +51,7 @@ public class AccountController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AccountDto> updateAccount(@PathVariable Long id, @RequestBody AccountDto request) {
+        sanitizationService.sanitize(request);
         return ResponseEntity.ok(accountService.updateAccount(id, request));
     }
 

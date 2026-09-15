@@ -2,7 +2,9 @@ package com.project.pawn.customeronboarding.service;
 
 import com.project.pawn.customeronboarding.dto.CustomerDto;
 import com.project.pawn.customeronboarding.dto.CustomerResponse;
-import com.project.pawn.customeronboarding.dto.GetCustomerResponse;
+import com.project.pawn.customeronboarding.dto.IdProofDto;
+import com.project.pawn.customeronboarding.dto.RelativeDto;
+import com.project.pawn.customeronboarding.dto.response.GetCustomerResponse;
 import com.project.pawn.customeronboarding.exception.CustomerValidationException;
 import com.project.pawn.customeronboarding.model.CustomerInfo;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
@@ -38,9 +40,14 @@ public class CustomerService {
 
         customerValidator.validateCustomer(request);
 
-        Long custId = customerCacheHandler.saveCustomerAndGetId(request);
-        customerImageHandler.uploadAllImagesToDisk(request, custId);
-        customerCacheHandler.updateImageUrls(custId, request);
+        CustomerInfo savedCustomer = customerCacheHandler.saveCustomer(request);
+        Long custId = savedCustomer.getCustId();
+        
+        CustomerDto savedCustomerDto = modelToDto.mapToFullCustomerDTO(savedCustomer);
+        copyImagesToSavedDto(request, savedCustomerDto);
+
+        customerImageHandler.uploadAllImagesToDisk(savedCustomerDto, custId);
+        customerCacheHandler.updateImageUrls(custId, savedCustomerDto);
 
         log.info("Successfully onboarded customer: {}, id: {}", request.getName(), custId);
 
@@ -61,8 +68,11 @@ public class CustomerService {
             throw new CustomerValidationException("Customer with ID " + id + " not found");
         }
 
-        customerImageHandler.uploadAllImagesToDisk(request, id);
-        customerCacheHandler.updateCustomer(id, request);
+        CustomerDto savedCustomerDto = customerCacheHandler.updateCustomer(id, request);
+        copyImagesToSavedDto(request, savedCustomerDto);
+        
+        customerImageHandler.uploadAllImagesToDisk(savedCustomerDto, id);
+        customerCacheHandler.updateImageUrls(id, savedCustomerDto);
 
         log.info("Successfully updated customer with ID: {}", id);
 
@@ -74,7 +84,7 @@ public class CustomerService {
     }
 
     public GetCustomerResponse getCustomers() {
-        return customerCacheRepository.getCustomersFromCache();
+        return customerCacheRepository.getAllBaseCustomers();
     }
 
     public CustomerDto getCustomerById(Long custId) {
@@ -96,5 +106,37 @@ public class CustomerService {
             customerPage = customerRepository.findAll(pageable);
         }
         return customerPage.map(modelToDto::mapToFullCustomerDTO);
+    }
+
+    private void copyImagesToSavedDto(CustomerDto request, CustomerDto savedDto) {
+        savedDto.setImage(request.getImage());
+
+        if (request.getIdProofs() != null && savedDto.getIdProofs() != null) {
+            for (IdProofDto reqProof : request.getIdProofs()) {
+                savedDto.getIdProofs().stream()
+                        .filter(s -> {
+                            if (reqProof.getIdProofId() != null && s.getIdProofId() != null) {
+                                return reqProof.getIdProofId().equals(s.getIdProofId());
+                            }
+                            return reqProof.getTempId() != null && reqProof.getTempId().equals(s.getTempId());
+                        })
+                        .findFirst()
+                        .ifPresent(s -> s.setImage(reqProof.getImage()));
+            }
+        }
+
+        if (request.getRelatives() != null && savedDto.getRelatives() != null) {
+            for (RelativeDto reqRel : request.getRelatives()) {
+                savedDto.getRelatives().stream()
+                        .filter(s -> {
+                            if (reqRel.getRelativeId() != null && s.getRelativeId() != null) {
+                                return reqRel.getRelativeId().equals(s.getRelativeId());
+                            }
+                            return reqRel.getTempId() != null && reqRel.getTempId().equals(s.getTempId());
+                        })
+                        .findFirst()
+                        .ifPresent(s -> s.setImage(reqRel.getImage()));
+            }
+        }
     }
 }

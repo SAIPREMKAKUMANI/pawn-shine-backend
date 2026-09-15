@@ -18,6 +18,7 @@ import com.project.pawn.billing.repository.BillItemRepository;
 import com.project.pawn.billing.repository.BillRepository;
 import com.project.pawn.billing.service.validations.BillValidationService;
 import com.project.pawn.common.enums.MediaType;
+import com.project.pawn.common.util.SecuritySanitizer;
 import com.project.pawn.customeronboarding.model.CustomerInfo;
 import com.project.pawn.customeronboarding.repository.CustomerRepository;
 import com.project.pawn.pledge.model.Item;
@@ -75,7 +76,7 @@ public class BillService {
     @Transactional
     public BillResponseDto createPledgeBill(CreatePledgeBillRequest request) {
         log.info("Creating pledge bill for customer {}", request.getCustId());
-
+        sanitizePledgeRequest(request);
         billValidationService.validateCustomerExists(request.getCustId());
         billValidationService.validateItemsNotEmpty(request.getItems());
         billValidationService.validateItems(request.getItems());
@@ -158,8 +159,9 @@ public class BillService {
      */
     @Transactional
     public BillResponseDto createRedemptionBill(CreateRedemptionBillRequest request) {
-        log.info("Creating redemption bill for customer {}", request.getCustId());
+        sanitizeRedemptionRequest(request);
 
+        log.info("Creating redemption bill for customer {}", request.getCustId());
         billValidationService.validateCustomerExists(request.getCustId());
         
         boolean hasAccounts = request.getAccounts() != null && !request.getAccounts().isEmpty();
@@ -365,5 +367,35 @@ public class BillService {
         }
 
         return dto;
+    }
+
+    // =============================================
+    // SANITIZATION HELPERS
+    // =============================================
+
+    private void sanitizePledgeRequest(CreatePledgeBillRequest request) {
+        request.setNotes(SecuritySanitizer.sanitizeInput(request.getNotes()));
+        if (request.getItems() != null) {
+            for (BillItemRequestDto item : request.getItems()) {
+                item.setAction(SecuritySanitizer.sanitizeInput(item.getAction()));
+                item.setDescription(SecuritySanitizer.sanitizeInput(item.getDescription()));
+                item.setLocation(SecuritySanitizer.sanitizeInput(item.getLocation()));
+            }
+        }
+        sanitizeBillAccounts(request.getAccounts());
+    }
+
+    private void sanitizeRedemptionRequest(CreateRedemptionBillRequest request) {
+        request.setNotes(SecuritySanitizer.sanitizeInput(request.getNotes()));
+        sanitizeBillAccounts(request.getAccounts());
+    }
+
+    private void sanitizeBillAccounts(List<BillAccountRequestDto> accounts) {
+        if (accounts != null) {
+            for (BillAccountRequestDto acc : accounts) {
+                acc.setAccountNumber(SecuritySanitizer.sanitizeInput(acc.getAccountNumber()));
+                acc.setDirection(SecuritySanitizer.sanitizeInput(acc.getDirection()));
+            }
+        }
     }
 }

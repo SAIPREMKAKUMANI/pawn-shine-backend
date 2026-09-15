@@ -121,7 +121,7 @@ public class BillValidationService {
             throw new BillValidationException("Net weight must be greater than 0",
                     List.of(new ErrorDetail("weightNet", "Net weight must be greater than 0")));
         }
-        if (weightGross.compareTo(weightNet) <= 0) {
+        if (weightGross.compareTo(weightNet) < 0) {
             log.info("Bill validation failed: gross weight <= net weight [gross={}, net={}]", weightGross, weightNet);
             throw new BillValidationException("Gross weight must be greater than net weight",
                     List.of(new ErrorDetail("weightGross", "Gross weight must be greater than net weight")));

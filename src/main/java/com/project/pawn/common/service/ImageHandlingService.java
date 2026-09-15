@@ -4,6 +4,7 @@ import com.project.pawn.common.enums.MediaType;
 import com.project.pawn.common.exception.PawnBrokingException;
 import com.project.pawn.common.exception.ErrorDetail;
 import com.project.pawn.customeronboarding.exception.GenericCustomerOnboardingException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -25,7 +26,10 @@ import static com.project.pawn.common.constants.Constants.INTERNAL_SERVER_ERROR;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ImageHandlingService {
+
+    private final ImageCompressionService imageCompressionService;
 
     private static final Path BASE_PATH_CUSTOMER = Path.of("/projects/pawn-images/customer");
     private static final Path BASE_PATH_ITEM = Path.of("/projects/pawn-images/items");
@@ -42,7 +46,7 @@ public class ImageHandlingService {
             retryFor = {IOException.class},
             backoff = @Backoff(delay = 2000)
     )
-    public String uploadImage(MultipartFile file, Long id, MediaType type) throws IOException {
+    public String uploadImage(MultipartFile file, Long id, Long entityUniqueId, MediaType type) throws IOException {
         if (file == null || file.isEmpty()) {
             log.warn("No file provided for ID {} type {}", id, type);
             return null;
@@ -59,9 +63,14 @@ public class ImageHandlingService {
             uploadPath = BASE_PATH_CUSTOMER.resolve(String.valueOf(id));
         }
 
-        String fileExtension = resolveFileExtension(file);
-        String uniqueName = type.name() + "_" + UUID.randomUUID() + "." + fileExtension;
+        String fileExtension = "jpg"; // Output of compression is always JPEG/jpg
+        String uniqueName = type.name() + "." + fileExtension;
+        if(entityUniqueId != null) {
+            uniqueName = type.name() + "_" + entityUniqueId + "." + fileExtension;
+        }
+
         Path filePath = uploadPath.resolve(uniqueName);
+        log.info("Attempting to upload and compress {} image for ID {} at {}", type, id, filePath);
 
         try {
             Files.createDirectories(uploadPath);
@@ -71,28 +80,27 @@ public class ImageHandlingService {
                 throw new PawnBrokingException(INTERNAL_SERVER_ERROR);
             }
 
-            try (var inputStream = file.getInputStream()) {
-                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-            }
+            // Compress the image before writing
+            byte[] compressedBytes = imageCompressionService.compressImage(file, type);
+            Files.write(filePath, compressedBytes);
 
-            log.info("Successfully uploaded {} image for ID {} at {}", type, id, filePath);
+            log.info("Successfully uploaded and compressed {} image for ID {} at {}", type, id, filePath);
         } catch (InvalidPathException e) {
             log.error("Invalid path for ID {}: {}", id, e.getMessage(), e);
             throw new PawnBrokingException("Invalid file path during " + type + " image upload");
         }
-
-        return "/api/images/" + id + "/" + uniqueName;
+        return filePath.toFile().getPath();
     }
 
     /**
      * Wraps uploadImage to convert checked IOException to unchecked exception.
      * Used inside lambda expressions where checked exceptions cannot be thrown.
      */
-    public String uploadImageSafe(MultipartFile file, Long id, MediaType type) {
+    public String uploadImageSafe(MultipartFile file, Long primaryId, Long entityUniqueId, MediaType type) {
         try {
-            return uploadImage(file, id, type);
+            return uploadImage(file, primaryId, entityUniqueId, type);
         } catch (IOException e) {
-            log.error("I/O error while uploading {} image for ID {}: {}", type, id, e.getMessage(), e);
+            log.error("I/O error while uploading {} image for primaryId {}, entityUniqueId {}: {}", type, primaryId, entityUniqueId, e.getMessage(), e);
             throw new PawnBrokingException("Failed to upload " + type + " image: " + e.getMessage());
         }
     }

@@ -1,5 +1,6 @@
 package com.project.pawn.wallet.controller;
 
+import com.project.pawn.common.service.RequestSanitizationService;
 import com.project.pawn.wallet.dto.CustomerWalletDto;
 import com.project.pawn.wallet.dto.WalletDepositRequest;
 import com.project.pawn.wallet.dto.WalletTransactionDto;
@@ -17,6 +18,7 @@ import java.util.List;
 public class WalletController {
 
     private final WalletService walletService;
+    private final RequestSanitizationService sanitizationService;
 
     @GetMapping("/{custId}")
     public ResponseEntity<CustomerWalletDto> getWallet(@PathVariable Long custId) {
@@ -30,6 +32,7 @@ public class WalletController {
 
     @PostMapping("/{custId}/deposit")
     public ResponseEntity<CustomerWalletDto> deposit(@PathVariable Long custId, @RequestBody WalletDepositRequest request) {
+        sanitizationService.sanitize(request);
         return new ResponseEntity<>(walletService.deposit(custId, request), HttpStatus.CREATED);
     }
 }

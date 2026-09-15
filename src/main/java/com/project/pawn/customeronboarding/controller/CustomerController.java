@@ -1,8 +1,9 @@
 package com.project.pawn.customeronboarding.controller;
 
+import com.project.pawn.common.service.RequestSanitizationService;
 import com.project.pawn.customeronboarding.dto.CustomerDto;
 import com.project.pawn.customeronboarding.dto.CustomerResponse;
-import com.project.pawn.customeronboarding.dto.GetCustomerResponse;
+import com.project.pawn.customeronboarding.dto.response.GetCustomerResponse;
 import com.project.pawn.customeronboarding.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final RequestSanitizationService sanitizationService;
 
     @PostMapping(value = "/onboard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomerResponse> createCustomer(@ModelAttribute CustomerDto request) {
+        sanitizationService.sanitize(request);
         CustomerResponse response = customerService.onboardCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -30,6 +33,7 @@ public class CustomerController {
     public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable("id") Long id,
             @ModelAttribute CustomerDto request) {
+        sanitizationService.sanitize(request);
         CustomerResponse response = customerService.updateCustomer(id, request);
         return ResponseEntity.ok(response);
     }
@@ -46,6 +50,7 @@ public class CustomerController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(required = false) String search) {
+        search = sanitizationService.sanitize(search);
         Page<CustomerDto> response = customerService.getCustomersPage(page, size, search);
         return ResponseEntity.ok(response);
     }

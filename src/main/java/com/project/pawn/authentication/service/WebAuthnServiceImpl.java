@@ -55,7 +55,21 @@ public class WebAuthnServiceImpl implements WebAuthnService {
         options.put("challenge", challenge);
         options.put("user", user);
         options.put("rp", Map.of("name", "PawnApp"));
-        options.put("pubKeyCredParams", List.of(Map.of("type", "public-key", "alg", -7)));
+        options.put("pubKeyCredParams", List.of(
+                Map.of("type", "public-key", "alg", -7),   // ES256
+                Map.of("type", "public-key", "alg", -257)  // RS256
+        ));
+
+        // Platform authenticator selection for mobile Android biometric & Windows Hello
+        Map<String, Object> authenticatorSelection = new HashMap<>();
+        authenticatorSelection.put("authenticatorAttachment", "platform");
+        authenticatorSelection.put("userVerification", "required");
+        authenticatorSelection.put("residentKey", "preferred");
+        authenticatorSelection.put("requireResidentKey", false);
+        options.put("authenticatorSelection", authenticatorSelection);
+
+        options.put("timeout", 60000);
+        options.put("attestation", "none");
 
         log.info("Successfully generated registration options for user: {}", req.getUsername());
         return options;
